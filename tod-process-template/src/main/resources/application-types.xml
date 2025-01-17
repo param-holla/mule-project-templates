@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="fileInformationObject" format="java">
+      <types:shape format="raml"><![CDATA[#%RAML 1.0 DataType
+type: object
+description: File Information
+properties:
+  fileType: 
+    type: string
+    required: true
+    description: File Type
+  fileName: 
+    type: string
+    required: true
+    description: File Name
+  filePath: 
+    type: string
+    required: true
+    description: File Path]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#7d864b88-8306-4360-af49-f59cb8529c56"/>
+  <types:enrichment select="#858942c7-501a-487b-9a1a-94f6516667a7">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="fileInformationObject[]"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#d621b6ba-53bc-4564-9d23-538431d074a6"/>
+</types:mule>

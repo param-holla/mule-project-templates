@@ -1,0 +1,13 @@
+http:
+  listener:
+    host: "0.0.0.0"
+    timeout: "30000"
+    port: "8082"
+  keystore:
+    path: "keystore.jks"
+    password: "![U/4dUJ+NZzEzunbeEmKdzA==]"
+
+security:
+  basic:
+    username: "tod_user"
+    password: "![TS0r6OUwOn0=]" #TODO: Replace Value Default is test123

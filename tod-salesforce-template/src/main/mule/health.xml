@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="active-health-check-flow" doc:id="618abf6f-5b2a-4a4c-b89f-86788301bc11" >
+		<salesforce:describe-sobject doc:name="Describe sobject" doc:id="c85f0fd9-05b2-4d40-887a-1e61b811f9fc" config-ref="Salesforce_Config" type="Account"/>
+		<ee:transform doc:name="Transform Message" doc:id="c3f54ecb-1696-4175-9698-6e02c0c8e121" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": "Successfully connected to Salesforce",
+	"timestamp": ((now() >> "America/Vancouver") as String{format: "yyyy-MM-dd'T'HH:mm:ss Z"})
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+200]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c00ac1e7-856d-4440-80f1-7e48eb55315e" >
+				<ee:transform doc:name="Build Response" doc:id="622f98af-fe9d-4024-a608-8cbbb332a4e5" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": "Failed to connect due to: " ++ (error.cause.exceptionMessage default (error.detailedDescription default "No Additional Information Found")),
+	"timestamp": ((now() >> "America/Vancouver") as String{format: "yyyy-MM-dd'T'HH:mm:ss Z"})
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+500]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

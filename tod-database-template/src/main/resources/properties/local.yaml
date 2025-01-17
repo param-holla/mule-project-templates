@@ -1,0 +1,59 @@
+keystore: 
+  path: "local.jks"
+  password: "![xKUgIUxIUOSQfD82up5YWA==]" # Please encrypt it with the encryption key being used in the project. "PASSWORD" is the current default key
+
+security:
+  basic:
+    username: "tod_user"
+    password: "![p/5rrykUfGI=]" # Please encrypt it with the encryption key being used in the project. "PASSWORD" is the template encryption password
+
+https:
+  port: "8082" # This value is mostly default, only change if you have any other specific port to be used.
+  basepath: "api/v1"
+  connection:
+    timeout: "60000" # In Milliseconds
+  reconnection:
+    frequency: "60000" # In Milliseconds
+    attempts: "5"
+  
+logging:
+  timeFormat: "yyyy-MM-dd'T'HH:mm:ss"
+  timeZone: "America/Vancouver"
+
+feature:
+  get:
+    base: "true"
+    delta: "true"
+    filter: "true"
+  insert: "true"
+  update: "true"
+  sp: "false"
+
+db:
+  delta.default.datefield: "LastModifiedDate"
+  reconnection:
+    attempts: "5"
+    frequency: "60000"  
+  timeout:
+    connection: "600000"
+    response: "600000"
+  host: "jdbc:postgresql://ec2-44-193-182-0.compute-1.amazonaws.com:5432/d2heaqp81s4vhl"
+  port: "5432"
+  username: "khakvbzxxqjkon"
+  password: "dcd75b5bc24e684051954391c32be9f3c325c8012d00c0cce522b4f82cb67d0e"
+  instance: ""
+  database: "d2heaqp81s4vhl"
+  
+cloudhub:
+  username: "REPLACE_ME"
+  password: "REPLACE_ME"
+  environment: "REPLACE_ME"
+  domain: "REPLACE_ME"
+  environmentId: "REPLACE_ME"
+  reconnection:
+    frequency: "60000"
+    attempts: "5"
+  notification:
+    timestamp:
+      timezone: "America/Vancouver"
+      format: "KK:mm:ss a, MMMM dd, uuuu"

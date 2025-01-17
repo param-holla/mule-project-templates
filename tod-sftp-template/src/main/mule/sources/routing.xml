@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="routing-main" doc:id="1b5a135a-9e11-4ec7-9c43-033572d9268e" >
+		<logger level="INFO" doc:name="Processing File" doc:id="f6f8c42a-ada1-45bf-b37c-591024fe3d01" message="Processing File: #[attributes.fileName]"/>
+		<choice doc:name="Route File to Dedicated Process" doc:id="a2efea76-fb51-4ba3-b99a-9889be32f45d" >
+			<when expression='#[lower(attributes.path) contains "/temp/"]'>
+				<logger level="INFO" doc:name="File matched on string TEST" doc:id="8709bc2c-61ee-4a0e-be34-7c9c430168d7" message="File is in TEMP directory"/>
+				<logger level="INFO" doc:name="REPLACE ME WITH LOGIC FOR THIS ROUTE" doc:id="b8d8bf21-a43d-42e0-8d34-3162241029cf" message="REPLACE ME WITH LOGIC FOR THIS ROUTE"/>
+			
+</when>
+			<when expression='#[lower(attributes.fileName) contains "test"]'>
+				<logger level="INFO" doc:name="File matched on string TEST" doc:id="e59f2ecb-2843-4720-b77c-27a719fdd9ce" message="File matched on string containing TEST"/>
+				<logger level="INFO" doc:name="Copy_of_REPLACE ME WITH LOGIC FOR THIS ROUTE" doc:id="e6bda709-ceb1-4eae-9905-bdce0a95fc8a" message="REPLACE ME WITH LOGIC FOR THIS ROUTE" />
+			</when>
+			<when expression='#[attributes.fileName endsWith(".txt")]'>
+				<logger level="INFO" doc:name="File matched on .TXT Extension" doc:id="52e3ae15-b4fc-40c3-ac69-d848cfc3232f" message="File matched on .txt Extension"/>
+				<logger level="INFO" doc:name="Copy_of_REPLACE ME WITH LOGIC FOR THIS ROUTE" doc:id="4ba2f86a-41b4-424f-8c2e-188701d9b385" message="REPLACE ME WITH LOGIC FOR THIS ROUTE" />
+			
+</when>
+			<otherwise >
+				<raise-error doc:name="Raise No Pattern Matched" doc:id="f587040a-5c63-4bca-ba82-9a1cf3ee66c7" type="CUSTOM:NO_PATTERN_MATCHED" description='#[attributes.fileName ++ " does not match any pattern. Can not process file."]'/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

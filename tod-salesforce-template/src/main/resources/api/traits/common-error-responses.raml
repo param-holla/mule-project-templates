@@ -1,0 +1,66 @@
+#%RAML 1.0 Trait
+usage: Apply this Trait to any API to provide basic http error response
+responses:
+  400:
+    description: Bad Request
+    body:
+      application/json:
+        displayName: Bad Request
+        example:
+          {
+            "message": "Bad/Invalid Request"            
+          }
+  404:
+    description: Not Found
+    body:
+      application/json:
+        displayName: Not Found
+        example:
+          {
+            "message": "Requested resource not found"             
+          }
+  405:
+    description: Method Not Allowed
+    body:
+      application/json:
+        displayName: Method Not Allowed
+        example:
+          {
+            "message": "Method not allowed/defined"            
+          }
+  406:
+    description: Not Acceptable
+    body:
+      application/json:
+        displayName: Not Acceptable
+        example:
+          {
+            "message": "Not Acceptable"            
+          }
+  408:
+    description: Request Timeout
+    body:
+      application/json:
+        displayName: Request Timeout
+        example:
+          {
+            "message": "Request Timeout"
+          }
+  415:
+    description: Unsupported Media Type
+    body:
+      application/json:
+        displayName: Unsupported Media Type
+        example:
+          {
+            "message": "Unsupported Media Type"
+          }
+  500:
+    description: Internal Server Error
+    body:
+      application/json:
+        displayName: Internal Server Error
+        example:
+          {
+            "message": "There was an exception within flow, Please check logs for more details"
+          }

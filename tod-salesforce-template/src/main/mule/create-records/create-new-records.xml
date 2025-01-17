@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="create-new-recordsFlow" doc:id="7e54a2ad-3dab-4fc7-9013-5d727712ed4f" >
+		<set-variable value="#[attributes.uriParams.'object-name']" doc:name="Set Object Name" doc:id="361aac9f-aa36-44da-a543-e684e00294d3" variableName="sfdc_object_name" />
+		<set-variable value="#[payload]" doc:name="request_received" doc:id="6d4a126a-0acb-41b0-bf34-aea4a8956ca8" variableName="request_received"/>
+		<ee:transform doc:name="Handle Date and DateTime Format Issues" doc:id="0693c41d-c3e7-48ce-aae5-c6588bdcc260">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+
+output application/java
+import * from dataweave::common
+---
+payload map (record, index) -> formatDateTimes(record)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="#[vars.sfdc_object_name]" doc:name="Create" doc:id="fbb115ed-9143-465d-ac8e-df81c33e5f66" config-ref="Salesforce_Config"/>
+		<ee:transform doc:name="Format Output" doc:id="27fabd9f-e00c-43be-9d97-792f99ed5fd3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dataweave::common
+---
+payload.items map (value, index) -> generateResponseObject(value, index, vars.sfdc_object_name, vars.request_received[index])]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Create Operation Completed" doc:id="5e41640a-9b98-46ba-b8c4-87b3a55dc9b4" message="Create Operation Completed"/>
+	</flow>
+</mule>

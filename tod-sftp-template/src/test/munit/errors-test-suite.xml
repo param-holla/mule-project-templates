@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="errors-test-suite.xml" />
+	
+	<munit:test name="errors-successful-Test" doc:id="6000f453-45d6-4401-a3bf-e5d20da4e63e" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Error Move" doc:id="4597f350-95f3-4100-8656-0c5c20824b12" processor="sftp:move">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="80933d85-b9c6-4127-bb3b-370873a0b1c9" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock File Create" doc:id="188bd1bc-4077-463c-88d7-3be3bafcdf3d" processor="sftp:write">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b32fce2f-9435-4aeb-8b2d-038a0c3e3ea4" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Timestamp" doc:id="8e19c800-7c5f-45b5-a526-02fb1eccb7b0" processor="set-variable">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Timestamp" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="53e62693-602e-4ad8-a67f-6a37abc8a442" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="timestamp" value='#[output application/json --- "2021-11-04-14-48-46" as String]' mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		
+</munit:behavior>
+		<munit:execution >
+			<ee:transform doc:name="Set Payload" doc:id="acaeb053-9ee0-4be2-8d1e-c73802ffd65e" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+readUrl('classpath://sample-data/sftp_post_errors.json','application/json')]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Errors File" doc:id="7448360c-892e-4728-80e4-616e4f7a43aa" name="post:\file\errors:application\json:tod-sftp-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="8b54f118-17c1-4bce-90d8-0a9d508da13a" actual="#[payload]" expected='#[{&#10;  "id": "DummyTestFile.txt",&#10;  "created": true,&#10;  "success": true,&#10;  "message": "File was succesfully moved to errors folder. Error details file created: /upload/mulesoft/template_testing/errors/DummyTestFile_2021-11-04-14-48-46_error_report.csv"&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="errors-move-failure-Test" doc:id="dcc50fb1-2471-47a4-acd3-126556637eab" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Error Move" doc:id="1b167a90-e685-4b8e-a511-de49f75b0486" processor="sftp:move">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="80933d85-b9c6-4127-bb3b-370873a0b1c9" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="SFTP:ACCESS_DENIED" />
+				</munit-tools:then-return>
+
+			
+</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock File Create" doc:id="3a7c35e0-dde3-477a-a8da-c113765d38fe" processor="sftp:write">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b32fce2f-9435-4aeb-8b2d-038a0c3e3ea4" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Cloudhub Notification" doc:id="b2fabf8f-ee34-4411-b08e-79946ce2bc29" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Create Cloudhub Notification" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="97fb9952-7df9-4e24-a6bf-9bd25ff34858" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		
+
+</munit:behavior>
+		<munit:execution >
+			<ee:transform doc:name="Set Payload" doc:id="cc223558-8209-454c-ac01-4da50d6f1827" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+readUrl('classpath://sample-data/sftp_post_errors.json','application/json')]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Errors File" doc:id="11d193c3-a699-46a3-aebd-e7139ffd918b" name="post:\file\errors:application\json:tod-sftp-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="c08fe909-9dd2-4860-931e-05bfb0fb5e6c" actual="#[payload]" expected='#[{&#10;  "id": "DummyTestFile.txt",&#10;  "created": false,&#10;  "success": false,&#10;  "message": "Failed during Error Processing on the MOVE operation. Error Message: "&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="errors-create-failure-Test" doc:id="0c87823a-ea06-41f6-be1f-0f273e3112c1" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Error Move" doc:id="67956595-9469-4164-b1c5-77d08c9fc996" processor="sftp:move">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="80933d85-b9c6-4127-bb3b-370873a0b1c9" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock File Create" doc:id="02b21258-1fba-407d-98e0-a33f9e409b4c" processor="sftp:write">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b32fce2f-9435-4aeb-8b2d-038a0c3e3ea4" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="MULE:UNKNOWN" />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Cloudhub Notification" doc:id="58a46f1d-5e85-48d9-ac6c-e9c3f8424fd2" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Create Cloudhub Notification" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="97fb9952-7df9-4e24-a6bf-9bd25ff34858" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		
+
+</munit:behavior>
+		<munit:execution >
+			<ee:transform doc:name="Set Payload" doc:id="6942acaa-d826-4f60-9e6e-c47ebd4cba24" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+readUrl('classpath://sample-data/sftp_post_errors.json','application/json')]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Errors File" doc:id="6a34a687-f9b3-46b6-bc68-341952873246" name="post:\file\errors:application\json:tod-sftp-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="4276f2fe-745f-46db-b318-df97575d60c6" actual="#[payload]" expected='#[{&#10;  "id": "DummyTestFile.txt",&#10;  "created": false,&#10;  "success": false,&#10;  "message": "Failed during Error Processing on the CREATE operation. Error Message: "&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

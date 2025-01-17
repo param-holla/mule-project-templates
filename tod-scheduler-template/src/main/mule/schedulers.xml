@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<flow name="Sample-1-Process" doc:id="5482a13e-37d9-4a48-b2e6-58bdabc94dfc" >
+		<scheduler doc:name="Scheduler" doc:id="f11f2839-e65b-4d2c-b40e-9e6e1e2e0c33" >
+			<scheduling-strategy >
+				<cron expression="${process.sample_process1.schedule.cron}" timeZone="${process.sample_process1.schedule.timezone}"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Sample Process Triggered" doc:id="fed162d5-d3fc-467e-a027-69abebb90117" message="Sample Process Triggered @ #[(now() &gt;&gt; Mule::p('logging.timeZone')) as String{format: Mule::p('logging.timeFormat')}]" category="${process.sample_process1.log.catagory}"/>
+		<flow-ref doc:name="Sample Process 1 Main Flow" doc:id="979c360e-4d0d-431a-a472-93542b9b8796" name="sample_process1-main"/>
+		<error-handler ref="Common_Error_Handler" />
+	</flow>
+</mule>

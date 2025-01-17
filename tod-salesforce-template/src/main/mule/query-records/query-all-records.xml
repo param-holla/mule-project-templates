@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<os:object-store name="sfdc-get-objects-object-store" doc:name="Object store" doc:id="5ca4ffe5-5b82-4a8f-8ca3-b38c5a97c3c7" />
+	<flow name="query-all-records" doc:id="51fb926d-971c-40d2-9d7b-b5c24dc0054c" >
+		<set-variable value="#[attributes.uriParams.'object-name']" doc:name="Set Object Name" doc:id="de5d34fb-b251-479d-bc6d-0b3b181cf193" variableName="sfdc_object_name"/>
+		<set-variable value="#[attributes.queryParams.fetch_size]" doc:name="Set Query Limit" doc:id="3e82ae87-1663-42d7-96c9-a5e3f424190f" variableName="sfdc_query_limit"/>
+		<salesforce:describe-sobject type="#[vars.sfdc_object_name]" doc:name="Describe sobject" doc:id="f7cdb3ac-5273-48d0-ad2b-96bbc0928229" config-ref="Salesforce_Config" />
+		<ee:transform doc:name="Creating SF Query" doc:id="6d581ec5-0db8-486c-b772-42a5ca98bb28" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain
+---
+"SELECT " ++ (payload.fields.Name joinBy ", ") ++ " FROM " ++ vars.sfdc_object_name ++ " Limit " ++ vars.sfdc_query_limit]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:query doc:name="Query sObject" doc:id="cd2c5d7c-9064-46ce-ba06-45be070479bd" config-ref="Salesforce_Config" >
+			<salesforce:salesforce-query >#[payload]</salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="To Json" doc:id="ef37228f-b321-48fc-a5f1-3915cdb422c2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Get-All Operation Complete" doc:id="79b02073-64b0-4f60-b4b7-978a75440fa4" message="Get-All Operation Complete"/>
+	</flow>
+</mule>

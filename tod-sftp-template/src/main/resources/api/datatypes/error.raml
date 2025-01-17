@@ -1,0 +1,13 @@
+#%RAML 1.0 DataType
+type: object
+description: Error Information
+
+properties:
+  index: 
+    type: string
+    required: true
+    description: If the file is indexable (csv, tsv, excel) then this should be the index number for the failure. If not this should be the failure type. 
+  errorDescription: 
+    type: string
+    required: true
+    description: error description

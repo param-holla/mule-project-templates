@@ -1,0 +1,25 @@
+tls:
+  protocol: "TLSv1.2"
+  
+batch:
+  status:
+   key: "JOB_STATUS"
+   running: "RUNNING"
+   complete: "COMPLETE" 
+   failed: "FAILED"
+   
+  execution:
+    queue: "execution.queue" 
+    
+output-file:
+  path: "/Users/kushan.gandhi/Documents/"
+  name: "output.csv"
+  header: "Local Authority,Specimen date,Cases (new),Cumulative cases,Cumulative incidence per 100,000 population,Testing episodes (new),Cumulative testing episodes"
+
+json:
+  logger:
+    application:
+      name: "batch-template-api"
+      version: "1.0.0"
+    disabled:
+      fields: "content"

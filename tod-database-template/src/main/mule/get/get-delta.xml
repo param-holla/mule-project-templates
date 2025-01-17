@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="get-delta-records" doc:id="9b6261c0-4e7d-423e-94dd-637cd24eea2a" >
+		<logger level="INFO" doc:name="Retrieving Records" doc:id="64048f37-cc28-485b-8e5f-78b6e0ef1766" message="Retrieving Delta Records from #[attributes.uriParams.'table_name']. Watermark: #[attributes.queryParams.'watermark']" />
+		<ee:transform doc:name="Build Where Clause" doc:id="ff9d38c5-0408-481c-9a26-8953288c7fb0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+var fieldName = if(attributes.queryParams.'field_name' != null and attributes.queryParams.'field_name' != '')
+	(attributes.queryParams.'field_name')
+else
+	Mule::p('db.delta.default.datefield')
+---
+"SELECT * FROM $(attributes.uriParams.'table-name') WHERE \"" ++ fieldName ++ "\" > :date"]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Select Records from Database" doc:id="ff5573ff-d630-4199-99b1-cab8e3fde3d3" config-ref="Database_Config" >
+			<db:sql ><![CDATA[#[payload]]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"date": (attributes.queryParams.'watermark')
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Keys to Camel Case" doc:id="75b9e1cc-6d14-4803-870c-f9a4f052b5b8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dataweave::common
+---
+camelizeKeys(payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Returning Records" doc:id="a33514d4-fd1a-4b2e-bca1-73b060ab08ae" message="#[sizeOf(payload)] records retrieved." />
+	</sub-flow>
+</mule>

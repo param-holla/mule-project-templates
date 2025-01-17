@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="post-test-suite.xml" />
+	<munit:test name="insert-records-test-suiteTest" doc:id="a205930c-836e-4d81-a0d3-4d77ad4221af" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock DB Request" doc:id="eb02b8c4-10c6-4461-b068-5155c4c04b6e" processor="db:insert">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fc99b4e0-12ba-4a07-94aa-0bc3f2b2aaf5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fc99b4e0-12ba-4a07-94aa-0bc3f2b2aaf5" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Inbound" doc:id="9a098b91-5c61-4c5c-9f49-b74ee6d553ba" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://sample-data/insert.json','application/json')]" mediaType="application/json" />
+				<munit:attributes value='#[{"uriParams":{"table-name": "players"}}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="d0e4d55a-04c5-44d4-bd7d-cc97990451ff" name="post:\(table-name):tod-database-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="870bd48f-2dd2-41ff-87a9-80dc441a20a9" actual="#[payload]" expected='#[{&#10;  message: "Successfully inserted all records to database."&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="0a861437-a21d-4595-96c2-bd73f229859b" actual="#[vars.httpStatus]" expected="#[201]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="insert-records-non-connectivity-failures-test-suiteTest" doc:id="313aa82d-1965-419e-9f3d-5bae9f2f9102" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock DB Request" doc:id="8f59b259-9b75-4d89-8dd2-c6317f3d203c" processor="db:insert">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fc99b4e0-12ba-4a07-94aa-0bc3f2b2aaf5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fc99b4e0-12ba-4a07-94aa-0bc3f2b2aaf5" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="CUSTOM:FAILED" />
+				</munit-tools:then-return>
+			
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Inbound" doc:id="472cb9c6-06dd-4df3-a7c2-fe9f5f1fcf40" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://sample-data/insert.json','application/json')]" mediaType="application/json" />
+				<munit:attributes value='#[{"uriParams":{"table-name": "players"}}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="3e93ddfe-ae2b-445d-8f5e-7efe1234893a" name="post:\(table-name):tod-database-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="02778537-29a7-4acc-a148-7f0d88ad3987" actual="#[payload]" expected='#[{&#10;  "message": "Not all records were inserted into the database.",&#10;  "errors": [&#10;    {&#10;      "FirstName": "Jason",&#10;      "LastName": "Todd",&#10;      "JerseyNumber": "22",&#10;      "LastUpdated": "2018-01-01 00:00:00.000008",&#10;      "error": "No value present"&#10;    },&#10;    {&#10;      "FirstName": "Tim",&#10;      "LastName": "Burton",&#10;      "JerseyNumber": "11",&#10;      "LastUpdated": "2025-01-01 00:00:00.000008",&#10;      "error": "No value present"&#10;    }&#10;  ]&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="22cb6f29-3318-4f05-b127-7411f05d5a57" actual="#[vars.httpStatus]" expected="#[201]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="insert-records-connectivity-failure-test-suiteTest" doc:id="09bef8e4-a144-4a5f-b29a-e453d07b2042" expectedErrorType="DB:CONNECTIVITY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock DB Request" doc:id="06832b8e-e4a0-42d9-a8da-40fb65006708" processor="db:insert">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fc99b4e0-12ba-4a07-94aa-0bc3f2b2aaf5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fc99b4e0-12ba-4a07-94aa-0bc3f2b2aaf5" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="DB:CONNECTIVITY" />
+				</munit-tools:then-return>
+			
+		</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Cloudhub Post" doc:id="3cb60f4c-a16d-44e5-afa3-10c30adad117" processor="cloudhub:create-notification">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Inbound" doc:id="cf7855b6-ccbf-4008-9790-abba4c14f968" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://sample-data/insert.json','application/json')]" mediaType="application/json" />
+				<munit:attributes value='#[{"uriParams":{"table-name": "players"}}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="118b98e4-2269-41e2-84d6-13b6f7a3c0ad" name="post:\(table-name):tod-database-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="4ea4a80d-9436-4fbe-b823-1f6f4404901e" actual="#[payload]" expected='#[{
+&#10;  message: "Successfully inserted all records to database."
+&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="40afc64e-472a-4d5a-a6ae-61cf84ddcb07" actual="#[vars.httpStatus]" expected="#[201]"/>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="update-records-test-suiteTest" doc:id="c33b5a61-22ed-41bd-8cf4-3910f85c8abc" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock DB Request" doc:id="c50801f1-d866-41e5-82bc-beaa46becdb9" processor="db:update">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="27ea2011-3d17-4b62-8822-a61a51b7d2f7" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Inbound" doc:id="04a5ccb3-4b85-4760-b6c8-c23b11e0b921" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://sample-data/update.json','application/json')]" mediaType="application/json" />
+				<munit:attributes value='#[{"uriParams":{"table-name": "players"}, "queryParams": {"primary_key_field": "PlayerID"}}]' />
+			
+</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="95ef27a1-28ad-4600-85df-cd116bb3f9d5" name="patch:\(table-name):tod-database-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="1829a64b-60bc-4fe1-8220-0bb9b4e4d588" actual="#[payload]" expected='#[{&#10;&#10;  message: "Successfully updated all records in the database."&#10;&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="5661f664-3172-42f1-b94c-794116039764" actual="#[vars.httpStatus]" expected="#[200]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="update-records-non-connectivity-failures-test-suiteTest" doc:id="4e0d3e36-e616-4609-9890-c91b6bba7e67" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock DB Request" doc:id="a45c4d0a-cb9b-4493-a500-6769f7f0d084" processor="db:update">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="27ea2011-3d17-4b62-8822-a61a51b7d2f7" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="CUSTOM:FAILURE" />
+				</munit-tools:then-return>
+			
+			
+</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Inbound" doc:id="e8cb056b-7ad0-45fb-9996-44b84e53c0b8" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://sample-data/update.json','application/json')]" mediaType="application/json" />
+				<munit:attributes value='#[{"uriParams":{"table-name": "players"}, "queryParams": {"primary_key_field": "PlayerID"}}]' />
+			
+</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="dba731ac-8b22-485f-b30d-3543c0ee56f6" name="patch:\(table-name):tod-database-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="79819746-fd14-4481-b071-a2f445710d96" actual="#[payload]" expected='#[{&#10;  "message": "Not all records were updated in the database.",&#10;  "errors": [&#10;    {&#10;      "queryString": "UPDATE players SET \"FirstName\" = :FirstName, \"LastName\" = :LastName, \"JerseyNumber\" = :JerseyNumber, \"LastUpdated\" = :LastUpdated WHERE \"PlayerID\" = 15",&#10;      "record": {&#10;        "FirstName": "Jason",&#10;        "LastName": "Todd",&#10;        "JerseyNumber": "22",&#10;        "PlayerID": 15,&#10;        "LastUpdated": "2018-01-01 00:00:00.000008"&#10;      },&#10;      "error": "No value present"&#10;    },&#10;    {&#10;      "queryString": "UPDATE players SET \"FirstName\" = :FirstName, \"LastName\" = :LastName, \"JerseyNumber\" = :JerseyNumber, \"LastUpdated\" = :LastUpdated WHERE \"PlayerID\" = 15",&#10;      "record": {&#10;        "FirstName": "Tim",&#10;        "LastName": "Burton",&#10;        "JerseyNumber": "11",&#10;        "PlayerID": 15,&#10;        "LastUpdated": "2025-01-01 00:00:00.000008"&#10;      },&#10;      "error": "No value present"&#10;    }&#10;  ]&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="b390bc0d-59a1-4389-8b86-b5fd722549d0" actual="#[vars.httpStatus]" expected="#[200]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="update-records-connectivity-failure-test-suiteTest" doc:id="57277e23-4cb6-4cee-b8fe-f82292a81c13" expectedErrorType="DB:CONNECTIVITY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock DB Request" doc:id="5047a19d-6d86-42fc-a101-6c6324edfbce" processor="db:update">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="27ea2011-3d17-4b62-8822-a61a51b7d2f7" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="DB:CONNECTIVITY" />
+				</munit-tools:then-return>
+			
+		</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Cloudhub Post" doc:id="30f906e0-8c3d-45fc-a053-55df03ce694f" processor="cloudhub:create-notification">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Inbound" doc:id="0efdc936-c8aa-401a-b589-293b39a45ee0" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://sample-data/update.json','application/json')]" mediaType="application/json" />
+				<munit:attributes value='#[{"uriParams":{"table-name": "players"}, "queryParams": {"primary_key_field": "PlayerID"}}]' />
+			
+</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="f06ffe34-304b-41e2-b405-b41e9e0e0261" name="patch:\(table-name):tod-database-template-config"/>
+		</munit:execution>
+		<munit:validation>
+			<logger level="INFO" doc:name="Logger" doc:id="2b8be3b4-6e25-419c-a6e3-a83bf907ad98" />
+
+		</munit:validation>
+	
+</munit:test>
+
+
+</mule>

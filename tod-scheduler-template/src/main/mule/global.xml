@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd">
+	
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="9ec2f3b7-c991-4544-b635-224d62ebb833" file="properties/${runtime.env}.yaml" key="${runtime.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="83761202-516b-4e7e-bd6c-73c28baa6cf8" file="properties/${runtime.env}.yaml" />
+	
+	<global-property doc:name="Global Property" doc:id="f1f427e3-7022-4635-8de9-6b7ca599bdd7" name="runtime.env" value="development" />
+	<tls:context name="TLS_Context" doc:name="TLS Context" doc:id="9a909a6b-4338-4737-9e76-285c341e06ee" >
+		<tls:key-store type="jks" path="${keystore.path}" keyPassword="${secure::keystore.password}" password="${secure::keystore.password}"/>
+	</tls:context>
+	<configuration doc:name="Configuration" doc:id="a70dd1c0-7175-4e4b-9dcf-ecb3ffa76d5f" defaultErrorHandler-ref="Common_Error_Handler" />
+	<global-property doc:name="Global Property" doc:id="a1cf62b3-0469-4d2e-b032-b924dae82bfc" doc:description="DO NOT EVER CHANGE THIS VALUE. OVERRIDE IT BY RUNTIME CONFIGURATION INSTEAD." name="runtime.key" value="mulemulemule" />
+	
+	<vm:config name="default_queue_config" doc:name="VM Config" doc:id="439bd60f-9aa2-40f2-a377-5843263c7e55" >
+		<vm:connection >
+			<reconnection >
+				<reconnect frequency="${queue.reconnection.frequency}" count="${queue.reconnection.attempts}" />
+			</reconnection>
+		</vm:connection>
+		<vm:queues >
+			<vm:queue queueName="sample_process1_queue" queueType="PERSISTENT" />
+		</vm:queues>
+	</vm:config>
+	<http:request-config name="Sample_Process-HTTP-Request" doc:name="HTTP Request configuration" doc:id="13f2cc24-d471-47b0-a975-c3cd74aea1a0" basePath="${process.sample_process1.base}">
+		<http:request-connection protocol="HTTPS" host="${process.sample_process1.host}" port="${process.sample_process1.port}" connectionIdleTimeout="${process.sample_process1.timeout.idle}" tlsContext="TLS_Context" >
+			<reconnection >
+				<reconnect frequency="${process.sample_process1.reconnection.frequency}" count="${process.sample_process1.reconnection.attempts}" />
+			</reconnection>
+		</http:request-connection>
+	</http:request-config>
+	<cloudhub:config name="CloudHub_Config" doc:name="CloudHub Config" doc:id="274b04d5-f614-4ed7-9757-5c22f3988de1" >
+		<cloudhub:connection username="${cloudhub.username}" password="${secure::cloudhub.password}" environment="${cloudhub.environmentId}" >
+			<reconnection >
+				<reconnect frequency="${cloudhub.reconnection.frequency}" count="${cloudhub.reconnection.attempts}" />
+			</reconnection>
+		</cloudhub:connection>
+	</cloudhub:config>
+	
+	
+</mule>

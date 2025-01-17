@@ -1,0 +1,361 @@
+{
+	"info": {
+		"_postman_id": "13917a69-c52f-409f-8c55-5bc586899c09",
+		"name": "Tod-Salesforce-Template",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Object",
+			"protocolProfileBehavior": {
+				"strictSSL": false
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test123",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "tod_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"RecordTypeId\": \"0123k000001lSVXAA2\",\r\n        \"Subject\": \"TEST CASE - IGNORE\",\r\n        \"Description\": \"IGNORE ME. TEST CASE\"\r\n    }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:8082/api/v1/Case",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"api",
+						"v1",
+						"Case"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get ALL of Object",
+			"protocolProfileBehavior": {
+				"strictSSL": false,
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test123",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "tod_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"RecordTypeId\": \"0123k000001lSVXAA2\",\r\n        \"Subject\": \"TEST CASE - IGNORE\",\r\n        \"Description\": \"IGNORE ME. TEST CASE\"\r\n    }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:8082/api/v1/Case?fetch_size=100",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"api",
+						"v1",
+						"Case"
+					],
+					"query": [
+						{
+							"key": "fetch_size",
+							"value": "100"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Object By LastModifiedDate",
+			"protocolProfileBehavior": {
+				"strictSSL": false,
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test123",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "tod_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"RecordTypeId\": \"0123k000001lSVXAA2\",\r\n        \"Subject\": \"TEST CASE - IGNORE\",\r\n        \"Description\": \"IGNORE ME. TEST CASE\"\r\n    }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:8082/api/v1/Case/filter?LastModifiedDate=2021-11-08T18:20:42.000+0000",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"api",
+						"v1",
+						"Case",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "LastModifiedDate",
+							"value": "2021-11-08T18:20:42.000+0000"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Object By Name",
+			"protocolProfileBehavior": {
+				"strictSSL": false,
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test123",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "tod_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"RecordTypeId\": \"0123k000001lSVXAA2\",\r\n        \"Subject\": \"TEST CASE - IGNORE\",\r\n        \"Description\": \"IGNORE ME. TEST CASE\"\r\n    }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:8082/api/v1/Case/filter?Subject=('Test Subject')",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"api",
+						"v1",
+						"Case",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "Subject",
+							"value": "('Test Subject')"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upsert Object",
+			"protocolProfileBehavior": {
+				"strictSSL": false
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test123",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "tod_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"RecordTypeId\": \"TESTRECORDTYPEID\",\r\n        \"Subject\": \"TEST CASE - IGNORE\",\r\n        \"Description\": \"IGNORE ME. TEST CASE UPDATED\",\r\n        \"Id\": \"5003K000003MzBmQAK\"\r\n    }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:8082/api/v1/Case?external_id_name=Id",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"api",
+						"v1",
+						"Case"
+					],
+					"query": [
+						{
+							"key": "external_id_name",
+							"value": "Id"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Object",
+			"protocolProfileBehavior": {
+				"strictSSL": false
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "test123",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "tod_user",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n        {\r\n        \"ShippingLatitude\": null,\r\n        \"ChannelProgramName\": null,\r\n        \"BillingCity\": \"Ridgefield Park\",\r\n        \"JigsawCompanyId\": null,\r\n        \"Name\": \"ABC Learning Franchise\",\r\n        \"OperatingHoursId\": null,\r\n        \"TickerSymbol\": null,\r\n        \"BillingGeocodeAccuracy\": null,\r\n        \"AccountSource\": null,\r\n        \"BillingPostalCode\": \"07660\",\r\n        \"ChannelProgramLevelName\": null,\r\n        \"ShippingGeocodeAccuracy\": null,\r\n        \"Sic\": null,\r\n        \"ShippingStreet\": null,\r\n        \"ShippingPostalCode\": null,\r\n        \"ShippingState\": null,\r\n        \"Id\": \"0013K000005FyJfQAK\",\r\n        \"BillingState\": \"NJ\",\r\n        \"AnnualRevenue\": null,\r\n        \"Jigsaw\": null,\r\n        \"Kumon_Id__c\": \"9191919191\",\r\n        \"Email__c\": null,\r\n        \"Site\": null,\r\n        \"Ownership\": null,\r\n        \"Description\": null,\r\n        \"Rating\": null,\r\n        \"Website\": null,\r\n        \"BillingLatitude\": null,\r\n        \"NumberOfEmployees\": null,\r\n        \"BillingLongitude\": null,\r\n        \"Phone\": \"2125551212\",\r\n        \"ShippingCountry\": null,\r\n        \"ShippingCity\": null,\r\n        \"ParentId\": null,\r\n        \"Country__c\": null,\r\n        \"AccountNumber\": null,\r\n        \"BillingCountry\": \"United States\",\r\n        \"BillingStreet\": \"55 TEST Challenger Road\",\r\n        \"ShippingAddress\": null,\r\n        \"Center_of_Interest__c\": null,\r\n        \"LastActivityDate\": null,\r\n        \"Fax\": null,\r\n        \"ShippingLongitude\": null\r\n    }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:8082/api/v1/Account",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"api",
+						"v1",
+						"Account"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "test123",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "tod_user",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

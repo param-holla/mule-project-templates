@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <flow name="tod-database-template-main">
+        <http:listener config-ref="tod-database-template-httpListenerConfig" path="${https.basepath}/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <flow-ref doc:name="Basic Auth Validation" doc:id="788e1ebd-ecfb-4897-b82a-5f1c7aabb519" name="validate-basic-authentication-header"/>
+		<apikit:router config-ref="tod-database-template-config" />
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="tod-database-template-console">
+        <http:listener config-ref="tod-database-template-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="tod-database-template-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\(table-name)\delta:tod-database-template-config">
+        <logger level="INFO" message="get:\(table-name)\delta:tod-database-template-config" />
+        <choice doc:name="Is Feature Enabled?" doc:id="583787ad-d05c-4e66-8b63-6e37132952b1">
+            <when expression="#[((Mule::p('feature.get.delta') default false) as Boolean)]">
+                <flow-ref doc:name="Flow Reference" doc:id="dad586fe-b49d-4d17-adfa-708db8677b28" name="get-delta-records" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="6460a3a2-1336-485a-8429-287518526af1" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="get:\(table-name)\filter:tod-database-template-config">
+        <logger level="INFO" message="get:\(table-name)\filter:tod-database-template-config" />
+        <choice doc:name="Is Feature Enabled?" doc:id="e71c79a3-7f81-4e56-a256-d92fcf9baeb4">
+            <when expression="#[((Mule::p('feature.get.filter') default false) as Boolean)]">
+                <flow-ref doc:name="Flow Reference" doc:id="e753abe9-377b-4c53-863b-7b24f21e2b30" name="get-filtered-records" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="1e9e2e3a-ec39-42dd-bcfa-eb7f8fb92e22" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="get:\heartbeat:tod-database-template-config">
+        <flow-ref doc:name="Flow Reference" doc:id="994622a7-3b77-4fe2-b14b-a8f1db993b5c" name="check-heartbeat"/>
+		<error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="get:\storedProc:tod-database-template-config">
+        <logger level="INFO" message="get:\storedProc:tod-database-template-config" />
+        <choice doc:name="Is Feature Enabled?" doc:id="0bc9a99f-0c4c-4c70-85dd-353800c223c0">
+            <when expression="#[((Mule::p('feature.get.sp') default false) as Boolean)]">
+                <logger level="INFO" doc:name="Logger" doc:id="a2f22ece-5863-4255-a020-05cf96f4aab6" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="91b9b3fd-c790-494c-aa04-56182021951e" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="get:\(table-name):tod-database-template-config">
+        <logger level="INFO" message="get:\(table-name):tod-database-template-config" />
+        <choice doc:name="Is Feature Enabled?" doc:id="bb5f4d94-9e67-49f1-8a58-c6ecb2b6a4f8">
+            <when expression="#[((Mule::p('feature.get.base') default false) as Boolean)]">
+                <flow-ref doc:name="Flow Reference" doc:id="1181bdea-6696-4b23-8f4a-fe8903c06ddb" name="get-records" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="3548fae7-e433-4738-a338-40d604f23272" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="post:\(table-name):tod-database-template-config">
+        <logger level="INFO" message="post:\(table-name):tod-database-template-config" />
+        <choice doc:name="Is Feature Enabled?" doc:id="96693f87-b220-4884-be69-f23d0cdaa963">
+            <when expression="#[((Mule::p('feature.insert') default false) as Boolean)]">
+                <flow-ref doc:name="Flow Reference" doc:id="4fb7c353-15a8-4d07-9d5e-d39aa29e20c2" name="insert-records" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="84b8d0ec-d966-42ca-9d35-30e913a756e6" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <sub-flow name="endpoint-not-enabled" doc:id="9f6fe2b9-f947-4d25-aa49-55d4bbb7b0d7">
+        <ee:transform doc:name="Endpoint Not Enabled" doc:id="a0a8d07f-1c3f-4050-a8e3-c9127ad95821">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Method Not Implemented. Please ensure endpoint is enabled in properties",
+	"timestamp": now() as String{format: "yyyy-MM-dd'T'HH:mm:ss Z"}
+}]]></ee:set-payload>
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="httpStatus"><![CDATA[%dw 2.0
+output application/java
+---
+501]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+    </sub-flow>
+    <flow name="patch:\(table-name):tod-database-template-config">
+        <logger level="INFO" message="patch:\(table-name):tod-database-template-config" />
+		<choice doc:name="Is Feature Enabled?" doc:id="d2ec8669-94f8-4185-85f5-20e01056b8fd" >
+			<when expression="#[((Mule::p('feature.update') default false) as Boolean)]" >
+				<flow-ref doc:name="Flow Reference" doc:id="fddc7c84-cdcd-40a6-83b8-cc0f72671679" name="update-records" />
+			</when>
+			<otherwise >
+				<flow-ref doc:name="Endpoint Not Enabled" doc:id="a980c625-639a-400f-8fc7-55c644e1e427" name="endpoint-not-enabled" />
+			</otherwise>
+		</choice>
+    </flow>
+</mule>

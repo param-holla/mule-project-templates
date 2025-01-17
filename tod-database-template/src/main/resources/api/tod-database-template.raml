@@ -1,0 +1,93 @@
+#%RAML 1.0
+title: tod-database-template
+description: This application is responsible for all API calls to the Database
+version: v1
+mediaType: 
+  - application/json
+protocols:
+  - HTTPS
+
+/heartbeat:
+  description: This method is used to check the health and connection with the api
+  get:
+    description: We will fetch a static custom payload to check the health
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+                {
+                 "message": "Connectivity with Database is a success"
+                }  
+
+/{table-name}:
+  get:
+    description: Retrieve all records up to a max count from database
+    queryParameters:
+      limit: number
+    responses:
+      200:
+        body:
+          application/json:
+  post:
+    description: "Insert records into the database table"
+    responses:
+      200:
+        body:
+          application/json:
+  patch:
+    description: "Update records in the database table"
+    queryParameters:
+      primary_key_field:
+        required: true
+        type: string
+        example: ID
+        description: The query param should be the exact field name of the identifier.
+    responses:
+      200:
+        body:
+          application/json:
+  /filter:
+    get:
+      description: This method is used to fetch the filtered records from respective object payload from sfdc. This is like a "where" clause in SQL. For example, If we need to fetch an contact with Name "Hemant sharma" then "Name" needs to be passed in the query param with the value to be searched.
+      queryParameters:
+        field_name:
+          required: false
+          type: any
+          example: "'Verma Industries', 'Scooby Incorporated'"
+          description: The query param should be the exact field name in the table. The parameter can support either a single value, or a comma seperated list of values as shown in the example. This will return a json formatted response.
+      responses:
+        200:
+          body:
+            application/json:
+  /delta:
+    get:
+      description: This method is used to fetch all records modified after a certain watermark. We can pass in an optional query parameter to specify what field to use as the filter. This will default to LastModifiedDate when not set. There is a required WATERMARK query parameter that takes in the string format for the field.
+      queryParameters:
+        field_name:
+          required: false
+          type: string
+          example: "createdDate"
+          description: The query param should be the exact field name in the table that you wish to compare the watermark to.
+        watermark:
+          required: true
+          type: string
+          example: "2021-01-01T00:00:00Z"
+          description: The query param should be the exact date/time for the delta.
+      responses:
+        200:
+          body:
+            application/json:
+/storedProc:
+  get:
+    description: This method is used to execute a stored procedure. Currently a work in progres
+    queryParameters:
+      procParam1:
+        required: false
+        type: any
+        example: "2021-01-01T00:00:00"
+        description: The query param would be the first parameter passed to the stored procedure.
+    responses:
+      200:
+        body:
+          application/json:

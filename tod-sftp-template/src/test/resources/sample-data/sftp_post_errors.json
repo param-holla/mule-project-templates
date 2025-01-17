@@ -1,0 +1,17 @@
+{
+    "fileInformation": {
+        "filePath": "/upload/mulesoft/template_testing/DummyTestFile.txt",
+        "fileType": "csv",
+        "fileName": "DummyTestFile.txt"
+    },
+    "errors": [
+        {
+            "index": "CSV_ROW_14",
+            "errorDescription": "Failed due to TEST. If this were a csv file, index could be the row the csv file fails at."
+        },
+        {
+            "index": "INVALID_TEXT_DOCUMENT_ERROR",
+            "errorDescription":"Failed due to TEST. This error message should match the index tag above."
+        }
+    ]
+}

@@ -1,0 +1,13 @@
+http:
+  port: "8081"
+  private: 
+    port: "8091"
+  
+https:
+  port: "8082"
+  private:
+    port: "8092"
+
+logger:
+  masked_fields: "client_id,client_secret,password"
+  disabled_fields: ""

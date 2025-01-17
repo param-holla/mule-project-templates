@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="7bbd2bfe-bf69-4c5c-afcf-447d916fc07d">
+		<http:listener-connection host="0.0.0.0" port="${https.port}" connectionIdleTimeout="${https.connection.timeout}" tlsContext="TLS_Context" protocol="HTTPS">
+			<reconnection >
+				<reconnect frequency="${https.reconnection.frequency}" count="${https.reconnection.attempts}" />
+			</reconnection>
+		</http:listener-connection>
+	</http:listener-config>
+	
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="9ec2f3b7-c991-4544-b635-224d62ebb833" file="properties/${runtime.env}.yaml" key="${runtime.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="83761202-516b-4e7e-bd6c-73c28baa6cf8" file="properties/${runtime.env}.yaml" />
+	
+	<global-property doc:name="Global Property" doc:id="f1f427e3-7022-4635-8de9-6b7ca599bdd7" name="runtime.env" value="development" />
+	<tls:context name="TLS_Context" doc:name="TLS Context" doc:id="9a909a6b-4338-4737-9e76-285c341e06ee" >
+		<tls:key-store type="jks" path="${keystore.path}" keyPassword="${secure::keystore.password}" password="${secure::keystore.password}"/>
+	</tls:context>
+	<configuration doc:name="Configuration" doc:id="a70dd1c0-7175-4e4b-9dcf-ecb3ffa76d5f" defaultErrorHandler-ref="Common_Error_Handler" />
+	<global-property doc:name="Global Property" doc:id="a1cf62b3-0469-4d2e-b032-b924dae82bfc" doc:description="DO NOT EVER CHANGE THIS VALUE. OVERRIDE IT BY RUNTIME CONFIGURATION INSTEAD." name="runtime.key" value="mulemulemule" />
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="1b0dd717-f196-4e49-85ca-d8333d69ef09" >
+		<salesforce:basic-connection username="${salesforce.username}" password="${secure::salesforce.password}" securityToken="${secure::salesforce.token}" url="${salesforce.url}" >
+			<reconnection >
+				<reconnect frequency="${salesforce.reconnection.frequency}" count="${salesforce.reconnection.attempts}"/>
+			</reconnection>
+		</salesforce:basic-connection>
+	</salesforce:sfdc-config>
+</mule>

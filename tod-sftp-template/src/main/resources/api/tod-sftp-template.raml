@@ -1,0 +1,80 @@
+#%RAML 1.0
+title: tod-sftp-template
+description: This application is responsible for all API calls to the SFTP Server
+version: v1
+mediaType: 
+  - application/json
+protocols:
+  - HTTPS
+
+types:
+  registerError: !include datatypes/registerError.raml
+  fileInformation: !include datatypes/fileInformation.raml
+  fileData: !include datatypes/fileData.raml
+  fileResponse: !include datatypes/fileResponse.raml
+  standardResponse: !include datatypes/standardResponse.raml
+
+/heartbeat:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/heartbeat.raml
+
+/files:
+  get:
+    description: Get the PATH for all available files
+    queryParameters:
+      filter:
+        type: string | nil
+        required: false
+        description: the url to append to our base query to retrieve a restricted set.
+    responses:
+      200:
+        body:
+          application/json:
+            type: fileInformation[]
+/file:
+  get:
+    description: Get a Base64 encoded file based on the path provided
+    queryParameters:
+      file_path: string
+    responses:
+      200:
+        body:
+          application/json:
+            type: fileResponse
+     
+  /upload:
+    post:
+      description: Post a Base64 Encoded File to the SFTP Server
+      responses:
+        200:
+          body:
+            application/json:
+              type: fileData
+  /archive:
+    post:
+      description: Archive file based on file name   
+      body:
+        application/json:
+          type: fileInformation
+      responses:
+        200:
+          body:
+            application/json:
+              type: standardResponse
+              example: !include examples/archiveStandardResponse.raml
+  /errors:
+    post:
+      description: Upsert errors from file run
+      body:
+        application/json:
+          type: registerError
+      responses:
+        201:
+          body:
+            application/json:
+              type: standardResponse
+              example: !include examples/errorStandardResponse.raml

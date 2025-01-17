@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <flow name="tod-sftp-template-main">
+        <http:listener config-ref="tod-sftp-template-httpListenerConfig" path="${https.basepath}/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="tod-sftp-template-config" />
+        <error-handler ref="Common_Error_Handler">
+        
+        </error-handler>
+    </flow>
+    <flow name="tod-sftp-template-console">
+        <http:listener config-ref="tod-sftp-template-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="tod-sftp-template-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\files:tod-sftp-template-config">
+        <logger level="INFO" message="get:\files:tod-sftp-template-config" />
+        <choice doc:name="Is Endpoint Enabled?" doc:id="ac24f2a1-a0d8-4fee-a162-5b5493deee6c">
+            <when expression="#[Mule::p('feature.getAll') as Boolean == true]">
+                <flow-ref doc:name="Get Files" doc:id="1649f8be-85c6-48f0-a8d4-75803d1f5ca6" name="get-file-list-main" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="54f05fb2-7ec6-45b3-9ed7-78c38f014e3c" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="get:\heartbeat:tod-sftp-template-config">
+        <flow-ref doc:name="Check Heartbeat" doc:id="8a58c266-e957-42d3-899e-986a37f3232b" name="check-heartbeat" />
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="get:\file:tod-sftp-template-config">
+        <logger level="INFO" message="get:\file:tod-sftp-template-config" />
+        <choice doc:name="Is Endpoint Enabled?" doc:id="675a0d74-7e48-40f1-b687-053b16c4b63f">
+            <when expression="#[Mule::p('feature.getFile') as Boolean == true]">
+                <flow-ref doc:name="Get Specific File by URL" doc:id="51136650-237c-42fb-983b-d08df710a7dd" name="get-specific-file-by-url" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="99b77fa1-6a69-42c3-ad99-d552bbc42ca2" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="post:\file\archive:application\json:tod-sftp-template-config">
+        <logger level="INFO" doc:name="Logger" doc:id="cbee7f2c-59da-4399-b715-b12d0ad67f59" message="post:\file\archive:tod-sftp-template-config" />
+        <choice doc:name="Is Endpoint Enabled?" doc:id="a7522ca9-b4e9-47b2-8d6a-4e708eb92dd9">
+            <when expression="#[Mule::p('feature.archive') as Boolean == true]">
+                <flow-ref doc:name="Archive File" doc:id="5106740a-8490-4568-bdb0-a82d7fe908f6" name="archive-file-by-name" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="02ee2018-d277-48b8-9474-fbe352e9af6e" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="post:\file\errors:application\json:tod-sftp-template-config">
+        <logger level="INFO" doc:name="Logger" doc:id="bc314103-8a5e-4f5a-b9e2-1ac517175c7c" message="post:\file\error:tod-sftp-template-config" />
+        <choice doc:name="Is Endpoint Enabled?" doc:id="b24576e4-8365-401a-afd6-3e499225aaf3">
+            <when expression="#[Mule::p('feature.error') as Boolean == true]">
+                <flow-ref doc:name="Process Errors" doc:id="3a6c183b-3126-4596-a362-34b277e00d77" name="error-main" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="953e6130-b32a-4539-87d1-3ca0b19f4537" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+        <error-handler ref="Common_Error_Handler" />
+    </flow>
+    <flow name="post:\file\upload:tod-sftp-template-config">
+        <logger level="INFO" message="post:\file:tod-sftp-template-config" />
+        <choice doc:name="Is Endpoint Enabled?" doc:id="5374b1a7-b23a-4da5-863a-649b347e6d26">
+            <when expression="#[Mule::p('feature.upload') as Boolean == true]">
+                <flow-ref doc:name="Process File Upload" doc:id="1f6aceee-c242-466e-a4ae-eb5a3a181837" name="upload-main" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="Endpoint Not Enabled" doc:id="bd32decd-218d-4ac6-bfae-3138d14596b0" name="endpoint-not-enabled" />
+            </otherwise>
+        </choice>
+		<error-handler ref="Common_Error_Handler" />
+    </flow>
+    <sub-flow name="endpoint-not-enabled" doc:id="0ac60b45-6f6e-4456-8bbc-8668f9ffbd10">
+        <ee:transform doc:name="Endpoint Not Enabled" doc:id="9ec5ff52-2183-4932-9006-1da30fe34998">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Method Not Implemented. Please ensure endpoint is enabled in properties",
+	"timestamp": now() as String{format: "yyyy-MM-dd'T'HH:mm:ss Z"}
+}]]></ee:set-payload>
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="httpStatus"><![CDATA[%dw 2.0
+output application/java
+---
+501]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+    </sub-flow>
+</mule>

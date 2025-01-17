@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<sub-flow name="update-records" doc:id="718b7a29-ed41-4321-9ccc-31d7d2bc220f" >
+		<logger level="INFO" doc:name="Updating Records" doc:id="db55aeee-a082-4721-a1a3-2d541cf422af" message="Updating Records in #[attributes.uriParams.'table-name']. Number of Records: #[sizeOf(payload)]" />
+		<ee:transform doc:name="Build Query Text and Attributes" doc:id="328fa67f-8034-4566-b062-180c4759bca0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var keyField = attributes.queryParams.'primary_key_field'
+var table = attributes.uriParams.'table-name'
+---
+payload map(v, i) -> 
+    {
+    queryString: "UPDATE " ++ table ++ " SET " ++ 
+    ((v - keyField) mapObject ((value, key, index) -> {"T": "\"" ++ (key) ++ "\" = :" ++ (key)}) pluck $ joinBy ", ")
+     ++ " WHERE \"" ++ keyField ++ "\" = " ++ v.PlayerID, 
+    record: v
+    }]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="errors" ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="4f76f2ae-9c38-4837-a6bd-50ea2dbdf241" >
+			<try doc:name="Try" doc:id="0f6020b1-f998-4306-b711-fd8f49e08e0c" >
+				<db:update doc:name="Update Record" doc:id="27ea2011-3d17-4b62-8822-a61a51b7d2f7" config-ref="Database_Config">
+					<db:sql ><![CDATA[#[payload.queryString]]]></db:sql>
+					<db:input-parameters ><![CDATA[#[payload.record]]]></db:input-parameters>
+				</db:update>
+				<error-handler >
+					<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6eb2a83e-6496-4e70-be38-4b0d6fc367e7" type="DB:CONNECTIVITY">
+						<logger level="INFO" doc:name="Connectivity Error. Propagating" doc:id="9fa74d8b-f226-4c0a-9a58-9f37b1230ce6" message="Connectivity Error. Propagating"/>
+					</on-error-propagate>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="Add error to response" doc:id="b09db9e1-23e4-4701-a327-563e12f30626" type="ANY">
+						<ee:transform doc:name="Add Record to Error" doc:id="f02d0e88-2b46-43b0-b9ae-8fa7f5543c2d" >
+							<ee:message >
+							</ee:message>
+							<ee:variables >
+								<ee:set-variable variableName="errors" ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.errors default []) + (payload ++ {"error": error.detailedDescription})]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</foreach>
+		<ee:transform doc:name="Success Message" doc:id="36906f01-d8b4-4483-971e-1cfb91e79dd2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(isEmpty(vars.errors))
+	{"message": "Successfully updated all records in the database."}
+else
+	{"message": "Not all records were updated in the database.", "errors": vars.errors}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+200]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log of Records" doc:id="cd0c554e-2a7e-48fb-bd13-637b3c9693ea" message='Successfully Inserted Records: #[""], Failed Inserted Records: #[""]' />
+	</sub-flow>
+</mule>

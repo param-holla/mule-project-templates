@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<sub-flow name="get-records" doc:id="4853e6fb-d64b-477f-b981-1a01bf69ef6a" >
+		<logger level="INFO" doc:name="Retrieving Records" doc:id="023f5329-f842-4d98-ba70-c33395f7a108" message="Retrieving Records from #[attributes.uriParams.'table-name']. Limit: #[attributes.queryParams.'limit']"/>
+		<db:select doc:name="Select Records from Database" doc:id="b0190b66-9a3c-4188-95a1-4b3e7fef0744" config-ref="Database_Config">
+			<db:sql >#["SELECT * FROM $(attributes.uriParams.'table-name')  LIMIT :limit"]</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"limit": (attributes.queryParams.'limit' as Number)
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Keys to Camel Case" doc:id="cf964d4d-b430-441a-8204-a9fb2993e476" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dataweave::common
+---
+camelizeKeys(payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Returning Records" doc:id="7353806a-5f9d-4419-8c17-1c98220eed50" message="#[sizeOf(payload)] records retrieved." />
+	</sub-flow>
+</mule>

@@ -1,0 +1,369 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- development
+- release/*
+
+variables: #Pipeline Level Variables
+  - group: CLOUDHUB_CREDENTIALS
+  #GLOBAL VARIABLES - USED FOR ALL RELEASES - NOTE YOU CAN STILL OVERRIDE IF NEED BE...
+  - name: ANYPOINT_APPLICATION_NAME
+    value: 'tod-sftp-template'
+  - name: ANYPOINT_DEPLOYMENT_TIMEOUT
+    value: 10000000
+  - name: ANYPOINT_OBJECT_STORE_V2
+    value: true
+  - name: ANYPOINT_PERSISTENT_QUEUES
+    value: false
+  - name: ANYPOINT_REGION
+    value: ca-central-1
+  - name: ANYPOINT_SKIP_DEPLOYMENT_VERIFICATION
+    value: false
+  - name: ANYPOINT_WORKER_TYPE
+    value: MICRO
+  - name: ANYPOINT_WORKER_NUMBER
+    value: 1
+  - name: ANYPOINT_RUNTIME_VERSION
+    value: 4.3.0
+  - name: ANYPOINT_PLATFORM_BASE_URI
+    value: https://anypoint.mulesoft.com/
+  - name: MAJOR_VERSION
+    value: 1
+  - name: MINOR_VERSION
+    value: 0
+  - name: BUILD_VERSION_NUMBER
+    value: $(MAJOR_VERSION).$(MINOR_VERSION).$(Build.BuildId)
+  - name: MAVEN_CACHE_FOLDER
+    value: $(Pipeline.Workspace)/.m2/repository
+  - name: MAVEN_OPTS
+    value: '-Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)'
+
+  #RELEASE SPECIFIC VARIABLES - NEED TO BE OVERRIDDEN FOR SPECIFIC ENVIRONMENT BELOW
+  - name: ENVIRONMENT_PREFIX
+    value: OVERRIDE_ME
+  - name: ANPOINT_ENVIRONMENT_NAME
+    value: OVERRIDE_ME
+  
+pool:
+  vmImage: 'ubuntu-latest'
+  name: Azure Pipelines
+  demands: maven
+
+stages:
+  - stage: build
+    variables:
+      - group: DEV_ENCRYPTION_KEY
+    jobs:
+      - job: TestMuleProject
+        condition: eq(variables['Build.SourceBranch'], 'refs/heads/development')
+        displayName: Test
+        continueOnError: false
+        steps:
+        - script: |
+            #!/bin/bash
+            cat << EOF > ./settings.xml
+            <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+              http://maven.apache.org/xsd/settings-1.0.0.xsd">
+              <servers>
+                  <server>
+                    <id>mulesoft-nexus-repository</id>
+                    <username>$(MULESOFT_NEXUS_USERNAME)</username>
+                    <password>$(MULESOFT_NEXUS_PASSWORD)</password>
+                </server>
+                  <server>
+                    <id>anypoint-exchange-v2</id>
+                    <username>$(ANYPOINT_DEVOPS_USERNAME)</username>
+                    <password>$(ANYPOINT_DEVOPS_PASSWORD)</password>
+                </server>
+                </servers>
+            </settings>
+            EOF
+          displayName: 'Generate Temp Settings File for Testing Phase'
+
+        - task: Cache@2
+          displayName: Cache Maven local repo
+          inputs:
+            key: 'maven | "$(Agent.OS)" | "TESTING" | **/pom.xml'
+            restoreKeys: |
+              maven | "$(Agent.OS)"
+              maven
+            path: $(MAVEN_CACHE_FOLDER)
+            
+        - task: Maven@3
+          displayName: 'Test MuleSoft Artifact'
+          inputs:
+            mavenPomFile: 'pom.xml'
+            mavenOptions: '-Xmx3072m $(MAVEN_OPTS)'
+            javaHomeOption: 'JDKVersion'
+            jdkVersionOption: '1.8'
+            jdkArchitectureOption: 'x64'
+            publishJUnitResults: true
+            mavenAuthenticateFeed: false
+            testResultsFiles: '**/surefire-reports/TEST-*.xml'
+            goals: 'test -s ./settings.xml -B --no-transfer-progress -Druntime.key=$(RUNTIME_KEY)'
+
+#        - task: PublishTestResults@2
+#          displayName: 'Publish Test Results **/TEST-*.xml e'
+#          inputs:
+#              testResultsFiles: '**/TEST-*.xml e'
+#              mergeTestResults: false
+          
+
+      - job: PackageAndStageDeploymentArtifact
+        condition: ne(variables['Build.SourceBranch'], 'refs/heads/development')
+        displayName: Test and Package
+        continueOnError: false
+        steps:
+        - script: |
+            #!/bin/bash
+            cat << EOF > ./settings.xml
+            <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+              http://maven.apache.org/xsd/settings-1.0.0.xsd">
+              <servers>
+                  <server>
+                    <id>mulesoft-nexus-repository</id>
+                    <username>$(MULESOFT_NEXUS_USERNAME)</username>
+                    <password>$(MULESOFT_NEXUS_PASSWORD)</password>
+                </server>
+                  <server>
+                    <id>anypoint-exchange-v2</id>
+                    <username>$(ANYPOINT_DEVOPS_USERNAME)</username>
+                    <password>$(ANYPOINT_DEVOPS_PASSWORD)</password>
+                </server>
+                </servers>
+            </settings>
+            EOF
+          displayName: 'Generate Temp Settings File for Package Phase'
+
+        - task: Cache@2
+          displayName: Cache Maven local repo
+          inputs:
+            key: 'maven | "$(Agent.OS)" | **/pom.xml'
+            restoreKeys: |
+              maven | "$(Agent.OS)"
+              maven
+            path: $(MAVEN_CACHE_FOLDER)
+
+        - task: Maven@3
+          displayName: 'Build MuleSoft Deploy Artifact via Maven'
+          inputs:
+            mavenPomFile: 'pom.xml'
+            mavenOptions: '-Xmx3072m $(MAVEN_OPTS)'
+            javaHomeOption: 'JDKVersion'
+            jdkVersionOption: '1.8'
+            jdkArchitectureOption: 'x64'
+            publishJUnitResults: true
+            mavenAuthenticateFeed: false
+            testResultsFiles: '**/surefire-reports/TEST-*.xml'
+            goals: 'package -s ./settings.xml -B --no-transfer-progress -Druntime.key=$(RUNTIME_KEY) -DattachMuleSources'  
+        - script: |
+            echo "Version ${BUILD_VERSION_NUMBER}"
+            mkdir /tmp/artifacts
+            cp target/*-*-mule-application.jar /tmp/artifacts/$(ANYPOINT_APPLICATION_NAME).jar
+            cp ./pom-deploy-template.xml /tmp/artifacts
+          displayName: 'Stage File for Upload to Artifacts Area'
+
+        - task: PublishPipelineArtifact@1
+          displayName: 'Upload Artifacts for Release Pipelines'
+          inputs:
+            targetPath: '/tmp/artifacts'
+            artifact: 'drop'
+            publishLocation: 'pipeline'
+        - script: |
+            if [[ $(build.sourceBranch) =~ [0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]* ]]; then
+              echo "Setting ReleaseEnabled to true..."
+              #echo "##vso[task.setvariable variable=ReleaseEnabled]true"
+              echo "##vso[task.setvariable variable=ReleaseEnabled;isOutput=true]Yes"
+            else
+              echo "Setting ReleaseEnabled to false..."
+              #echo "##vso[task.setvariable variable=ReleaseEnabled]false"
+              echo "##vso[task.setvariable variable=ReleaseEnabled;isOutput=true]No"
+            fi
+          name: SetReleaseEnabled
+          displayName: 'Set ReleaseEnabled based off a proper build number scheme' 
+        - script: echo $(SetReleaseEnabled.ReleaseEnabled)
+          name: echovar
+  - stage: DeployDevelopment
+    dependsOn: build
+    condition: and(succeeded('build'),  eq(dependencies.build.outputs['PackageAndStageDeploymentArtifact.SetReleaseEnabled.ReleaseEnabled'], 'Yes'), ne(variables['Build.SourceBranch'], 'refs/heads/development'))
+    #Development SCOPPED VARIABLES
+    variables:
+      - group: DEV_ENCRYPTION_KEY
+      - name: ENVIRONMENT_PREFIX
+        value: development                           # Used for setting the properties filename ex. qa.properties
+      - name: ANPOINT_ENVIRONMENT_NAME
+        value: Development
+    jobs:
+      - deployment: 'Development'
+        displayName: Deploy CloudHub - Development
+        pool: 
+          vmImage: 'Ubuntu-latest'
+        environment: Development             #DevOps Environment Name
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo $(SetReleaseEnabled.ReleaseEnabled)
+                  name: echovar
+                - script: echo deploying to $(ANYPOINT_ENVIRONMENT_NAME)
+                - task: DownloadPipelineArtifact@2
+                - script: |
+                    #!/bin/bash
+                    ls -l -srt .
+                    ls -l -srt $(Pipeline.Workspace)
+                    ls -l -srt $(Pipeline.Workspace)/drop/
+                    cat $(Pipeline.Workspace)/drop/pom-deploy-template.xml
+                  displayName: 'View pom-deploy-tempate'
+                
+                - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+                  displayName: 'Replace Deployment Values by Environment'
+                  inputs:
+                    rootDirectory: '$(Pipeline.Workspace)/drop/'
+                    targetFiles: 'pom-deploy-template.xml => pom-deploy.xml'
+                    encoding: 'utf-8'
+                    escapeType: none
+                    verbosity: detailed
+                    actionOnMissing: fail
+                - script: |
+                    #!/bin/bash
+                    pwd
+                    ls -l -srt
+                    cat $(Pipeline.Workspace)/drop/pom-deploy.xml
+                  displayName: 'View CloudHub POM Deploy Script'
+                - task: Maven@3
+                  displayName: 'CloudHub Deploy'
+                  inputs:
+                    mavenOptions: '-Xmx3072m'
+                    javaHomeOption: 'JDKVersion'
+                    jdkVersionOption: '1.8'
+                    jdkArchitectureOption: 'x64'
+                    publishJUnitResults: false
+                    mavenAuthenticateFeed: false
+                    mavenPomFile: '$(Pipeline.Workspace)/drop/pom-deploy.xml'
+                    goals: 'mule:deploy -f $(Pipeline.Workspace)/drop/pom-deploy.xml -DmuleDeploy -Danypoint.redeploy=true -Dmule.artifact=$(Pipeline.Workspace)/drop/$(ANYPOINT_APPLICATION_NAME).jar -Danypoint.applicationName=$(ANYPOINT_APPLICATION_NAME)-$(ENVIRONMENT_PREFIX) -e -B --no-transfer-progress'
+
+  - stage: DeployQA
+    dependsOn: DeployDevelopment
+    condition: succeeded('DeployDevelopment')
+    #QA SCOPPED VARIABLES
+    variables:
+      - group: QA_ENCRYPTION_KEY
+      - name: ENVIRONMENT_PREFIX
+        value: qa                           # Used for setting the properties filename ex. qa.properties
+      - name: ANPOINT_ENVIRONMENT_NAME
+        value: QA
+
+    jobs:
+      - deployment: 'QA'
+        displayName: Deploy CloudHub - QA
+        pool: 
+          vmImage: 'Ubuntu-latest'
+        environment: QA
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo $(SetReleaseEnabled.ReleaseEnabled)
+                  name: echovar
+                - script: echo deploying to $(ANYPOINT_ENVIRONMENT_NAME)
+                - task: DownloadPipelineArtifact@2
+                - script: |
+                    #!/bin/bash
+                    ls -l -srt .
+                    ls -l -srt $(Pipeline.Workspace)
+                    ls -l -srt $(Pipeline.Workspace)/drop/
+                    cat $(Pipeline.Workspace)/drop/pom-deploy-template.xml
+                  displayName: 'View pom-deploy-tempate'
+                
+                - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+                  displayName: 'Replace Deployment Values by Environment'
+                  inputs:
+                    rootDirectory: '$(Pipeline.Workspace)/drop/'
+                    targetFiles: 'pom-deploy-template.xml => pom-deploy.xml'
+                    encoding: 'utf-8'
+                    escapeType: none
+                    verbosity: detailed
+                    actionOnMissing: fail
+                - script: |
+                    #!/bin/bash
+                    pwd
+                    ls -l -srt
+                    cat $(Pipeline.Workspace)/drop/pom-deploy.xml
+                  displayName: 'View CloudHub POM Deploy Script'
+                - task: Maven@3
+                  displayName: 'CloudHub Deploy'
+                  inputs:
+                    mavenOptions: '-Xmx3072m $(MAVEN_OPTS)'
+                    javaHomeOption: 'JDKVersion'
+                    jdkVersionOption: '1.8'
+                    jdkArchitectureOption: 'x64'
+                    publishJUnitResults: false
+                    mavenAuthenticateFeed: false
+                    mavenPomFile: '$(Pipeline.Workspace)/drop/pom-deploy.xml'
+                    goals: 'mule:deploy -f $(Pipeline.Workspace)/drop/pom-deploy.xml -DmuleDeploy -Danypoint.redeploy=true -Dmule.artifact=$(Pipeline.Workspace)/drop/$(ANYPOINT_APPLICATION_NAME).jar -Danypoint.applicationName=$(ANYPOINT_APPLICATION_NAME)-$(ENVIRONMENT_PREFIX) -e -B --no-transfer-progress'
+
+  - stage: DeployProduction
+    dependsOn: DeployQA
+    condition: succeeded('DeployQA')
+    #PRODUCTION SCOPPED VARIABLES
+    variables:
+      - group: PROD_ENCRYPTION_KEY
+      - name: ENVIRONMENT_PREFIX
+        value: production                           # Used for setting the properties filename ex. qa.properties
+      - name: ANPOINT_ENVIRONMENT_NAME
+        value: Production
+    jobs:
+      - deployment: 'Production'
+        displayName: Deploy CloudHub - Production
+        pool: 
+          vmImage: 'Ubuntu-latest'
+        environment: Production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: echo $(SetReleaseEnabled.ReleaseEnabled)
+                  name: echovar
+                - script: echo deploying to $(ANYPOINT_ENVIRONMENT_NAME)
+                - task: DownloadPipelineArtifact@2
+                - script: |
+                    #!/bin/bash
+                    ls -l -srt .
+                    ls -l -srt $(Pipeline.Workspace)
+                    ls -l -srt $(Pipeline.Workspace)/drop/
+                    cat $(Pipeline.Workspace)/drop/pom-deploy-template.xml
+                  displayName: 'View pom-deploy-tempate'
+                
+                - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+                  displayName: 'Replace Deployment Values by Environment'
+                  inputs:
+                    rootDirectory: '$(Pipeline.Workspace)/drop/'
+                    targetFiles: 'pom-deploy-template.xml => pom-deploy.xml'
+                    encoding: 'utf-8'
+                    escapeType: none
+                    verbosity: detailed
+                    actionOnMissing: fail
+                - script: |
+                    #!/bin/bash
+                    pwd
+                    ls -l -srt
+                    cat $(Pipeline.Workspace)/drop/pom-deploy.xml
+                  displayName: 'View CloudHub POM Deploy Script'
+                - task: Maven@3
+                  displayName: 'CloudHub Deploy'
+                  inputs:
+                    mavenOptions: '-Xmx3072m'
+                    javaHomeOption: 'JDKVersion'
+                    jdkVersionOption: '1.8'
+                    jdkArchitectureOption: 'x64'
+                    publishJUnitResults: false
+                    mavenAuthenticateFeed: false
+                    mavenPomFile: '$(Pipeline.Workspace)/drop/pom-deploy.xml'
+                    goals: 'mule:deploy -f $(Pipeline.Workspace)/drop/pom-deploy.xml -DmuleDeploy -Danypoint.redeploy=true -Dmule.artifact=$(Pipeline.Workspace)/drop/$(ANYPOINT_APPLICATION_NAME).jar -Danypoint.applicationName=$(ANYPOINT_APPLICATION_NAME) -e -B --no-transfer-progress'

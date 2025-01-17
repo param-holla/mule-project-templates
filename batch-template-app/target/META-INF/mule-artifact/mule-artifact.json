@@ -1,0 +1,52 @@
+{
+  "configs": [
+    "implementation.xml",
+    "global.xml",
+    "receiver.xml",
+    "error-handling.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "0f4f8bd9-34fe-410e-8028-cbbd1ea50165:batch-pattern-template-api:1.0.0",
+  "minMuleVersion": "4.3.0-20200824",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "log4j2.xml",
+        "global.xml",
+        "transformations/common.dwl",
+        "transformations/getData.dwl",
+        "transformations/data-transformation.dwl",
+        "transformations/getHealthcheckResponse.dwl",
+        "transformations/error/unsupportedMediaTypeMessage.dwl",
+        "transformations/error/methodNotAllowedMessage.dwl",
+        "transformations/error/notFoundMessage.dwl",
+        "transformations/error/notAcceptableMessage.dwl",
+        "transformations/error/badRequestMessage.dwl",
+        "transformations/error/notImplementedMessage.dwl",
+        "transformations/error/genericMessage.dwl",
+        "config/dev.yaml",
+        "config/common.yaml",
+        "config/local.yaml",
+        "config/prod.yaml",
+        "config/secured/dev.yaml",
+        "config/secured/local.yaml",
+        "config/secured/prod.yaml",
+        "receiver.xml",
+        "application-types.xml",
+        "output/output.csv",
+        "certificates/local-sender.jks",
+        "implementation.xml",
+        "data/data.csv",
+        "error-handling.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

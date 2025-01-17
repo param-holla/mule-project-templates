@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<munit:config name="create-test-suite.xml" />
+	<munit:test name="create-test-suite-failed-Test" doc:id="d38f688f-8cdc-4769-8d29-bd41bfe26f58" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Salesforce Create" doc:id="ec9ff23d-b19b-4d3f-a4eb-b50b7204735b" processor="salesforce:create">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fbb115ed-9143-465d-ac8e-df81c33e5f66" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[&#10;output application/json&#10;---&#10;readUrl('classpath://sample-data/failing_sf_response.json','application/json')&#10;]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<ee:transform doc:name="Set Request Data" doc:id="b043efc9-43ba-4044-ade8-3f066efa28e2">
+				<ee:message>
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+readUrl('classpath://sample-data/account-create.json')]]></ee:set-payload>
+					<ee:set-attributes><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"uriParams": {
+		'object-name': 'Account'
+	}
+}]]></ee:set-attributes>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Flow-ref to create-new-recordsFlow" doc:id="fda2d0c8-1421-4ccc-a0a8-8d39c6fe80e9" name="create-new-recordsFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="7e5dbfab-80f9-477b-93d2-fe94647c5557" actual="#[payload]" expected='#[[&#10;  {&#10;    "salesforceId": null,&#10;    "objectName": "Account",&#10;    "success": false,&#10;    "error": "Forced Test Failure",&#10;    "inputRequest": {&#10;      "Name": "Test User",&#10;      "BillingCity": "Test Street",&#10;      "BillingState": "British Columbia",&#10;      "BillingCountry": "Canada",&#10;      "BillingPostalCode": "V1T8M1",&#10;      "BillingStreet": "1504"&#10;    }&#10;  }&#10;]]'/>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="create-test-suite-successful-Test" doc:id="c66da390-be8f-46c7-8d59-b1f88a4c2234" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Salesforce Create" doc:id="0cffb1e8-69b7-4fc1-9968-3e6cff376286" processor="salesforce:create">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fbb115ed-9143-465d-ac8e-df81c33e5f66" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[
+&#10;output application/json
+&#10;---
+&#10;readUrl('classpath://sample-data/successful_sf_response.json','application/json')
+&#10;]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<ee:transform doc:name="Set Request Data" doc:id="738019ec-20db-4c7b-96e8-8af711fbd955">
+				<ee:message>
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+readUrl('classpath://sample-data/account-create.json')]]></ee:set-payload>
+					<ee:set-attributes><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"uriParams": {
+		'object-name': 'Account'
+	}
+}]]></ee:set-attributes>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Flow-ref to create-new-recordsFlow" doc:id="da23e45e-bcb4-4acf-a0fc-0cdfef186363" name="create-new-recordsFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="f929fa96-e9b0-4b3f-9dec-668a1fae37af" actual="#[payload]" expected='#[[
+&#10;  {
+&#10;    "salesforceId": 1234,
+&#10;    "objectName": "Account",
+&#10;    "success": true,
+&#10;    "error": null,
+&#10;    "inputRequest": {
+&#10;      "Name": "Test User",
+&#10;      "BillingCity": "Test Street",
+&#10;      "BillingState": "British Columbia",
+&#10;      "BillingCountry": "Canada",
+&#10;      "BillingPostalCode": "V1T8M1",
+&#10;      "BillingStreet": "1504"
+&#10;    }
+&#10;  }
+&#10;]]'/>
+		</munit:validation>
+	</munit:test>
+
+</mule>

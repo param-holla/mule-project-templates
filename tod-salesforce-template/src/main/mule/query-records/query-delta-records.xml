@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="query-delta-recordsFlow" doc:id="31696626-0916-430a-8f3b-0459a68d8d18" >
+		<set-variable value="#[attributes.uriParams.'object-name']" doc:name="Set Object Name" doc:id="be86132a-117c-4c85-976c-492999c8f96b" variableName="filter_delta_sfdc_object_name" />
+		<set-variable value="#[attributes.queryParams.LastModifiedDate]" doc:name="last_modified_date" doc:id="96a7829f-dafe-4f0c-82ce-ee9113d0c7e9" variableName="last_modified_date" />
+		<salesforce:describe-sobject type="#[vars.filter_delta_sfdc_object_name]" doc:name="Describe sobject" doc:id="a354a7a5-dd89-4c67-b40a-1c7c209ac381" config-ref="Salesforce_Config" />
+		<ee:transform doc:name="Creating Query for SF Search" doc:id="8e63cbd6-81c6-48b2-8519-4b016d2eb30d">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output text/plain
+---
+"SELECT " ++ (payload.fields.name joinBy ", ")
+++ " FROM " ++ vars.filter_delta_sfdc_object_name ++ " WHERE LastModifiedDate > " ++ vars.last_modified_date ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<salesforce:query doc:name="Query Salesforce Object" doc:id="0b594939-4624-4b48-8181-60dce6c3b4fc" config-ref="Salesforce_Config">
+					<salesforce:salesforce-query>#[payload]</salesforce:salesforce-query>
+				</salesforce:query>
+		<ee:transform doc:name="To Json" doc:id="64c32708-c704-4c49-a7d7-42fb6a444ae1">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<logger level="INFO" doc:name="Get-Delta Operation Complete" doc:id="37c6abf6-cb91-400e-8897-9db59c197b05" message="Get-Delta Operation Complete" />
+	</flow>
+</mule>

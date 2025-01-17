@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="account-sync-test-suite.xml" />
+	<munit:test name="transform-records-test-suiteTest" doc:id="1417d679-eec9-47e5-a930-b904feaaac32" >
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="99da4159-4e15-420d-a636-62484f4324bd" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://sample-data/db-records.json','application/json')]" mediaType="application/json" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="488f26ee-79ca-4907-aeb2-59077d1dc42d" name="account-sync-transform-db-records"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="86b48b0c-1121-4973-8b09-65a6dcd45dd1" actual="#[payload]" expected='#[[&#10;  {&#10;    "User_ID__c": "1",&#10;    "Name": "Shane Lucyk",&#10;    "Phone": "2505551234",&#10;    "Email__c": null,&#10;    "BillingStreet": "1504 test road",&#10;    "BillingState": "British Columbia",&#10;    "BillingCity": "Vancouver",&#10;    "BillingPostalCode": "V1T 8M1"&#10;  },&#10;  {&#10;    "User_ID__c": "3",&#10;    "Name": "John Tester",&#10;    "Phone": "2225557777",&#10;    "Email__c": "j.tester@test.com",&#10;    "BillingStreet": "1233 test street",&#10;    "BillingState": "British Columbia",&#10;    "BillingCity": "Nelson",&#10;    "BillingPostalCode": "B2B 2B2"&#10;  },&#10;  {&#10;    "User_ID__c": "2",&#10;    "Name": "Alan Dummy",&#10;    "Phone": "7785551212",&#10;    "Email__c": null,&#10;    "BillingStreet": "1 main street",&#10;    "BillingState": "Alberta",&#10;    "BillingCity": "Calgary",&#10;    "BillingPostalCode": "A1A 1A1"&#10;  },&#10;  {&#10;    "User_ID__c": "4",&#10;    "Name": "Lars Larson",&#10;    "Phone": "1225554444",&#10;    "Email__c": null,&#10;    "BillingStreet": null,&#10;    "BillingState": null,&#10;    "BillingCity": null,&#10;    "BillingPostalCode": null&#10;  }&#10;]]'/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="salesforce-sf-failure-test-suiteTest" doc:id="51fdd79c-3dfc-4e0b-ad1a-1c4f7e823976" timeOut="12000000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock post to cloudhub" doc:id="80cc81ea-2001-4764-99d4-6db862dd308f" processor="cloudhub:create-notification">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="23eac57f-ebc5-4b18-902d-2c97e1bf79d5" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://sample-data/sf-failed-response.json','application/json')]" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="4d869d60-744e-4fd6-93bc-26c5e6d73fa0" name="account-sync-sf-failures"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="265a3ee8-7313-4e16-89d0-cf0c42de14b0" actual="#[payload.message]" expected='#["Some records failed to upload to Salesforce.\n Record with User ID 5 failed due to test failure\nRecord with User ID 5 failed due to test failure"]'/>
+		</munit:validation>
+	</munit:test>
+
+
+	<munit:test name="salesforce-sf-no-failures-test-suiteTest" doc:id="631967a0-e954-4c19-9583-b3e8bd64ec56" timeOut="12000000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock post to cloudhub" doc:id="4c1e167c-16ed-4fc4-8478-4e17e5132817" processor="cloudhub:create-notification">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="2cefe4fe-1f67-4007-98b2-b5f0ea025921" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://sample-data/sf-successful-response.json','application/json')]" />
+
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="e52e56d2-0cbb-4d62-8a30-97d4ac3c22e1" name="account-sync-sf-failures"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:verify-call doc:name="Verify Failed path not taken" doc:id="5f8d76b5-e031-451e-99ae-80553fe1c89c" processor="logger">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="1e406818-03e5-4856-ad16-dc3190afc280" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+
+		</munit:validation>
+	
+</munit:test>
+	<munit:test name="account-sync-test-suiteTest" doc:id="6b737236-3f4f-4d10-849c-9e224f436f23" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Retrieve Watermark" doc:id="c668b507-8da5-4e07-9526-74501747b836" processor="os:retrieve">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cddf8827-4a82-4d35-91d4-fb3b7ecf4929" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="deltaWatermark" value='#["2021-01-01 00:00:00.000000"]' mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Retrieve Records" doc:id="a5ed3cdc-53bc-4adc-8ab4-f746330add8e" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f13e31b9-613f-4328-9742-c32ae1a90665" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://sample-data/db-records.json','application/json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Salesforce Upsert" doc:id="9ab59965-5049-4b43-987b-6ddfe4643c90" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cc5b0184-05ca-4a21-8e90-536bb3fb195b" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://sample-data/sf-successful-response.json','application/json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Watermark Update" doc:id="bc58ee43-5a27-447d-9bb2-213b786a7542" processor="os:store">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="a7282645-281d-455c-9089-68f4adaa585f" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow Reference" doc:id="ad2cf55f-62e4-4695-ad82-62b5dfefcb79" name="get:\accountSync:tod-process-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="2cbe6a40-2834-434d-81a5-6104c35446f2" actual="#[payload.message]" expected='#["All records successfully updated in salesforce"]'/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="account-sync-connectivity-failure-test-suiteTest" doc:id="87951a3f-85f2-4378-91e8-c210698c9eea" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Retrieve Watermark" doc:id="d184f459-6a35-4502-9f70-33c4fbd1c1c9" processor="os:retrieve">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cddf8827-4a82-4d35-91d4-fb3b7ecf4929" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="deltaWatermark" value='#["2021-01-01 00:00:00.000000"]' mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Retrieve Records" doc:id="3910ee41-5078-429e-91f0-c926bc5d5d1c" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f13e31b9-613f-4328-9742-c32ae1a90665" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://sample-data/db-records.json','application/json')]" mediaType="application/json" />
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Salesforce Upsert" doc:id="7472c957-110c-4350-b272-22b2220e7360" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cc5b0184-05ca-4a21-8e90-536bb3fb195b" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://sample-data/sf-successful-response.json','application/json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Watermark Update" doc:id="d70f3f3b-c3be-477d-9d72-d645f3d1c65a" processor="os:store">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="a7282645-281d-455c-9089-68f4adaa585f" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Cloudhub Request" doc:id="c2041b87-083c-4c75-9c46-1e10c8c6c4f3" processor="cloudhub:create-notification">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		
+</munit:behavior>
+		<munit:execution >
+			<try doc:name="Try" doc:id="dd48f13c-fad3-4c16-a6e1-954d4d043324" >
+				<flow-ref doc:name="Flow Reference" doc:id="dcd87842-fda8-4525-9b02-22a391e86721" name="get:\accountSync:tod-process-template-config" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="954cee73-13dd-4ffe-afe9-327e23519fa9" >
+						<logger level="INFO" doc:name="Logger" doc:id="456ea29a-4ace-4ced-a263-3cb9096f5bb2" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		
+</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="5ae21e00-674f-4204-a81d-f82fb16d3c73" actual='#[payload mapObject ((value, key, index) -&gt; (key): if (typeOf(value) == Object) value -"timestamp" else value)]' expected='#[{&#10;  "message": "HTTP Connectivity Exception has occured.\nError Message: .\nError Payload Body: No Error Payload Body",&#10;  "customProperties": {&#10;    "errorType": "HTTP Connectivity Exception"&#10;  },&#10;  "priority": "ERROR"&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+	
+<munit:test name="account-sync-unhandled-failure-test-suiteTest" doc:id="b09bd1ef-70ec-4ac2-8bb6-bf80eb916b36" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Retrieve Watermark" doc:id="578c9be9-ca2e-425d-a946-ed5eed25e35b" processor="os:retrieve">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cddf8827-4a82-4d35-91d4-fb3b7ecf4929" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="deltaWatermark" value='#["2021-01-01 00:00:00.000000"]' mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Retrieve Records" doc:id="4a299f03-5ff4-471a-9af3-2ea32269c3a9" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f13e31b9-613f-4328-9742-c32ae1a90665" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://sample-data/db-records.json','application/json')]" mediaType="application/json" />
+					<munit-tools:error typeId="CUSTOM:UNHANDLED" />
+				</munit-tools:then-return>
+			
+
+</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Salesforce Upsert" doc:id="9eaa85c6-114e-410d-94dd-f9bad04ca466" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cc5b0184-05ca-4a21-8e90-536bb3fb195b" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://sample-data/sf-successful-response.json','application/json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Watermark Update" doc:id="9c02df77-d9e8-4aa1-a80b-8594a7835a23" processor="os:store">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="a7282645-281d-455c-9089-68f4adaa585f" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Cloudhub Request" doc:id="34c8eba8-0e15-417d-b778-5175f3d873e5" processor="cloudhub:create-notification">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		
+</munit:behavior>
+		<munit:execution >
+			<try doc:name="Try" doc:id="af5fc402-c32f-420f-92a8-078da2cbb247" >
+				<flow-ref doc:name="Flow Reference" doc:id="81bc5f90-599d-4226-aecd-caeb6c3d2ee9" name="get:\accountSync:tod-process-template-config" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c323a23b-5c16-4f35-9b9d-f40f7216937b" >
+						<logger level="INFO" doc:name="Logger" doc:id="2d3396cd-14ba-43fd-bb52-ac84dc1293e3" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		
+</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="95459cd6-643b-4bf1-9dd7-2bc7ea6b479a" actual='#[payload mapObject ((value, key, index) -&gt; (key): if (typeOf(value) == Object) value -"timestamp" else value)]' expected='#[{&#10;  "message": "An Unhandled Exception has occured.\nError Message: No value present.\nError Payload Body: No Error Payload Body",&#10;  "customProperties": {&#10;    "errorType": "Unhandled Exception"&#10;  },&#10;  "priority": "ERROR"&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+	
+</mule>

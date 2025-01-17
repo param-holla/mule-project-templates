@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="build-errors-response" doc:id="c1615b68-1b20-411d-a518-6da8d66bc3c5" >
+		<ee:transform doc:name="Build Response Body" doc:id="9083669b-7409-443c-8fed-e8cd8fc20321">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "id": payload.fileInformation.fileName,
+    "created": true,
+    "success": true,
+    "message": "File was succesfully moved to errors folder. Error details file created: " ++ vars.errorFilePath
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="error-build-variables" doc:id="9c31f011-e976-4002-9894-67bb9a013373" >
+		<set-variable value='#[import * from dw::core::Strings&#10;---&#10;substringAfterLast(payload.fileInformation.fileName, ".")]' doc:name="Extension" doc:id="a5ab1f10-4518-46d2-8829-80598daebacd" variableName="extension"/>
+		<set-variable value='#[now() as String{format: "yyyy-MM-dd-HH-mm-ss"}]' doc:name="Timestamp" doc:id="53e62693-602e-4ad8-a67f-6a37abc8a442" variableName="timestamp"/>
+		<ee:transform doc:name="Build File Variables" doc:id="d621b6ba-53bc-4564-9d23-538431d074a6" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="errorFilePath" ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+---
+substringBeforeLast(payload.fileInformation.filePath, "/") 
+++ "/errors/" 
+++ 
+(
+	substringBeforeLast(payload.fileInformation.fileName, ".") ++ 
+	"_" ++ 
+	(vars.timestamp as String)  ++ 
+	"_error_report" ++ 
+	".csv"
+)]]></ee:set-variable>
+				<ee:set-variable variableName="targetPath" ><![CDATA[%dw 2.0
+output application/json 
+import * from dw::core::Strings
+---
+(
+	substringBeforeLast(payload.fileInformation.filePath, "/")
+	++ "/errors/" 
+)]]></ee:set-variable>
+				<ee:set-variable variableName="originalFileName" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.fileInformation.fileName]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<flow name="error-main" doc:id="2369351a-c890-45ac-bc8e-45b2afe22960" >
+		<flow-ref doc:name="Build Error Variables" doc:id="03007f33-6eae-4f90-98de-b7fdd721752a" name="error-build-variables"/>
+		<flow-ref doc:name="Move Source File to Errors Folder" doc:id="402e51d7-b59a-4081-91cb-e9761af4f55a" name="move-to-errors-folder" />
+		<flow-ref doc:name="Create CSV Error File" doc:id="9b3aa153-bc91-4ffd-815d-b2827e19afc3" name="create-csv-errors-file"/>
+		<flow-ref doc:name="Flow Reference" doc:id="30c59e6b-7417-4e84-a6dd-41187029d378" name="build-errors-response" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="11ef79ad-5467-476e-9d5e-5ac6137dd88a" type="SFTP:ACCESS_DENIED, SFTP:CONNECTIVITY, SFTP:FILE_ALREADY_EXISTS, SFTP:FILE_LOCK, SFTP:ILLEGAL_CONTENT, SFTP:ILLEGAL_PATH, SFTP:RETRY_EXHAUSTED">
+				<flow-ref doc:name="Raise SFTP Cloudhub Notification" doc:id="9f7a6689-83a9-48f2-83c7-15316e6fd4bf" name="sftpConnectivityException"/>
+				<ee:transform doc:name="Build Failure Message" doc:id="d651826c-a720-4256-a99e-29adeb42366d" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  id: vars.originalFileName,
+  created: false,
+  success: false,
+  message: "Failed during Error Processing on the " ++ (vars.flowPoint default "UNKNOWN") ++ " operation. Error Message: " ++ (error.detailedDescription default "No Additional Information")
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="230034c5-f1fc-4adc-992a-d59b4bcd688f">
+				<ee:transform doc:name="Build Failure Message" doc:id="cad22b98-f9dc-486e-b321-21ff73ad5d27" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  id: vars.originalFileName,
+  created: false,
+  success: false,
+  message: "Failed during Error Processing on the " ++ (vars.flowPoint default "UNKNOWN") ++ " operation. Error Message: " ++ (error.detailedDescription default "No Additional Information")
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		
+		
+		</error-handler>
+	</flow>
+	<sub-flow name="create-csv-errors-file" doc:id="98f8b6f1-7632-460d-b8fb-cb50cc42bd26" >
+		<set-variable value="CREATE" doc:name="FlowPoint Create" doc:id="6118bb8d-0746-40a8-973a-6560f94a1c02" variableName="flowPoint"/>
+		<sftp:write doc:name="Write CSV Error File" doc:id="b32fce2f-9435-4aeb-8b2d-038a0c3e3ea4" config-ref="SFTP_Config" lock="true" mode="APPEND" path="#[vars.errorFilePath]">
+			<sftp:content ><![CDATA[#[output application/csv
+---
+payload.errors]]]></sftp:content>
+		</sftp:write>
+		<logger level="INFO" doc:name="Logger" doc:id="0f9e375a-0da4-4b6d-8f48-b4069ea6b83d" message="Successfully wrote CSV error file"/>
+	</sub-flow>
+	<sub-flow name="move-to-errors-folder" doc:id="00b1f8e3-63cf-43cc-a716-bcaf9f7e78d9" >
+		<set-variable value="MOVE" doc:name="FlowPoint Move" doc:id="bd5eac00-776e-4502-a3e0-247c7475d730" variableName="flowPoint" />
+		<sftp:move doc:name="Archive File" doc:id="80933d85-b9c6-4127-bb3b-370873a0b1c9" config-ref="SFTP_Config" sourcePath="#[payload.fileInformation.filePath]" targetPath="#[vars.targetPath]"/>
+		<logger level="INFO" doc:name="Successfully Moved Source File to Errors Folder" doc:id="fa774520-f5ad-4a5e-b258-3891dec1c5d3" message="Successfully Moved Source File to Errors Folder" />
+	</sub-flow>
+</mule>

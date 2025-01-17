@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="apikit-test-suite.xml" />
+	
+	
+	<munit:test name="bad-request-test-suiteTest" doc:id="b2171952-1333-4479-b292-18d606e22845" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock API Kit Router to throw Expected Core Exception" doc:id="f2413c45-842e-4821-9c7b-0cb185b9cb35" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="tod-database-template-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:BAD_REQUEST" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<try doc:name="Try" doc:id="880a1833-d0ba-467c-afaf-7c5a0517a968" >
+				<flow-ref doc:name="Flow Reference" doc:id="3b9db42f-f44d-4223-9e0b-508d8e898a63" name="tod-database-template-main" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="357f386a-10be-49bc-9419-dde11e250d3c" />
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="a44bf410-3e9d-44f8-8828-39995202c90d" actual="#[payload]" expected='#[{
+&#10;  "message": "Bad request: "
+&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="ea3f9881-f75f-45b2-b007-a3d5a5eb1ade" actual="#[vars.httpStatus]" expected="#[400]"/>
+		</munit:validation>
+	</munit:test>
+
+    <munit:test name="not-found-test-suiteTest" doc:id="0557aef9-802a-4cc6-85a5-dc97a1bf6980" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock API Kit Router to throw Expected Core Exception" doc:id="c8f82fec-f39a-4e56-a372-4a1a7a9f402f" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="tod-database-template-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:NOT_FOUND" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<try doc:name="Try" doc:id="7f492a7e-fd53-457a-ad37-035e95579bd7" >
+				<flow-ref doc:name="Flow Reference" doc:id="d70d75ca-6319-4d8b-a26b-95299a90a439" name="tod-database-template-main" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e1c5ab74-ab3a-4992-9383-5b08d5e3c189" />
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="1f629d0d-a7de-4caa-be12-662b74a9adae" actual="#[payload]" expected='#[{&#10;&#10;  "message": "Resource not found: "&#10;&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="c218e6e4-703b-4d3e-ab3e-186fadf983e8" actual="#[vars.httpStatus]" expected="#[404]"/>
+		</munit:validation>
+	</munit:test>
+
+
+    <munit:test name="method-not-allowed-test-suiteTest" doc:id="5e8b444c-d1da-4b75-bfcf-0ed6c6666b17" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock API Kit Router to throw Expected Core Exception" doc:id="2f94b466-b313-45cd-a3f2-ce537f106a7d" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="tod-database-template-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:METHOD_NOT_ALLOWED" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<try doc:name="Try" doc:id="dfe533d9-4af1-431a-a8e1-b4d98099edb7" >
+				<flow-ref doc:name="Flow Reference" doc:id="3fb14161-074a-4fbb-9ade-49852117f918" name="tod-database-template-main" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="84a34d0c-4305-4e32-a2a1-33325a1d3dfa" />
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="1b0b1342-7d0b-4746-9b2b-9fb00378e06f" actual="#[payload]" expected='#[{&#10;&#10;  "message": "Method not allowed: "&#10;&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="2902a79e-50b3-4322-914f-fd7f762e82d3" actual="#[vars.httpStatus]" expected="#[405]"/>
+		</munit:validation>
+	</munit:test>
+
+
+    <munit:test name="not-acceptable-test-suiteTest" doc:id="6c24b947-82a8-44b1-b6da-ad21203bcc85" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock API Kit Router to throw Expected Core Exception" doc:id="7cd77b99-6608-49d4-82ea-006fc75fe622" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="tod-database-template-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:NOT_ACCEPTABLE" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<try doc:name="Try" doc:id="5d44a060-cfb4-45c5-9c10-1c866590c72f" >
+				<flow-ref doc:name="Flow Reference" doc:id="5cdccd01-bc36-4b99-b55f-f08e3058a291" name="tod-database-template-main" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="bf800f74-635f-4ed8-8e0b-7eeee99f027e" />
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="5e1043d7-708b-4aa6-85bd-9f82f7b6d4dc" actual="#[payload]" expected='#[{&#10;&#10;  "message": "Not acceptable: "&#10;&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="368ac96c-67b9-4b0e-8d16-11b6c39178fe" actual="#[vars.httpStatus]" expected="#[406]"/>
+		</munit:validation>
+	</munit:test>
+
+
+    <munit:test name="unsupported-media-type-test-suiteTest" doc:id="ad7db945-c216-43e5-b80a-7ab803dda796" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock API Kit Router to throw Expected Core Exception" doc:id="7f2bce99-4f26-457f-a70a-42000283efd0" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="tod-database-template-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:UNSUPPORTED_MEDIA_TYPE" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<try doc:name="Try" doc:id="07456297-a596-4118-8db1-d55a4aabca84" >
+				<flow-ref doc:name="Flow Reference" doc:id="707ead1a-1814-426d-8773-448acef2fe5e" name="tod-database-template-main" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5ccfe1fa-3dcb-45fd-a01d-167160197d63" />
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="e9c38957-0a2c-4252-9065-c95847cfe429" actual="#[payload]" expected='#[{&#10;&#10;  "message": "Unsupported media type: "&#10;&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="b14b12c6-6b23-4fe5-a77f-ccb86ac5790d" actual="#[vars.httpStatus]" expected="#[415]"/>
+		</munit:validation>
+	</munit:test>
+
+
+
+    <munit:test name="not-implemented-test-suiteTest" doc:id="2025b506-5d48-4db1-a04d-0172c250e0e9" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock API Kit Router to throw Expected Core Exception" doc:id="6fb366e5-01fa-4d9c-8b71-6a0db7dcb6af" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="tod-database-template-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:NOT_IMPLEMENTED" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<try doc:name="Try" doc:id="eede76f5-91c3-4d70-866b-7024ab7532b7" >
+				<flow-ref doc:name="Flow Reference" doc:id="99ffc28f-932d-46d2-8ed4-5748c5724cb8" name="tod-database-template-main" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="370139e6-9fd0-409a-aded-e7bfd5ea889e" />
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert Payload" doc:id="7ce1550e-269f-406d-9d6c-4164d8f3411d" actual="#[payload]" expected='#[{&#10;&#10;  "message": "Not Implemented: "&#10;&#10;}]'/>
+			<munit-tools:assert-equals doc:name="Assert Status Code" doc:id="547da701-917a-40b4-a283-797ca515689b" actual="#[vars.httpStatus]" expected="#[501]"/>
+		</munit:validation>
+	</munit:test>
+</mule>

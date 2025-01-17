@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="dataweave-examples" doc:id="3d87af9f-465d-4855-8e31-d7a334f34c22" >
+		<ee:transform doc:name="Dataweave Examples" doc:id="fbef3fa9-fa1a-46ff-8a95-c641f9037bc2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import dataweave::common as common
+
+output application/json
+---
+[{
+	"Format String Examples": {
+		"Regular String": common::formatString("test without spaces"),
+		"Space Example": common::formatString("   test with  spaces "),
+		"Tab Example": common::formatString("	test with tabs spaces		"),
+		"Number String": common::formatString("1234"),
+		"Number": common::formatString(1234),
+		"DateTime Example": common::formatString(now()),
+		"Date Example": common::formatString(now() as Date),		
+	},
+	"Format Max Length Examples": {
+		"Regular Max Length": common::formatMaxLength("0123456", 5),
+		"Exact Regular Max Length": common::formatMaxLength("0123456", 7),
+		"Bigger Regular Max Length": common::formatMaxLength("0123456", 10),
+		"Zero Max Length": common::formatMaxLength("0123456",0),
+		"Invalid Number": common::formatMaxLength(1234, 2),
+		"Invalid DateTime Example": common::formatMaxLength(now(), 2),
+		"Invalid Date Example": common::formatMaxLength(now() as Date, 2)
+	},
+	"Format Phone Number": {
+		"Regular Phone Number": common::formatPhoneNumber("(514)-555-5555"),
+		"International Phone Number": common::formatPhoneNumber("+1514-555-5555"),
+		"Numbers only Phone Number": common::formatPhoneNumber("15145555555"),
+		"Invalid Number": common::formatPhoneNumber(1234),
+		"Invalid DateTime Example": common::formatPhoneNumber(now()),
+		"Invalid  Date Example": common::formatPhoneNumber(now() as Date)
+	},
+	"Format Date To String": {
+		"Current Date": common::formatDateToString(now() as Date),
+		"Current DateTime": common::formatDateToString(now()),
+		"Date Example": common::formatDateToString("2020-10-20" as Date),
+		"Date Time Example": common::formatDateToString(|2003-10-01T23:57:59Z|),
+		"Date String Example": common::formatDateToString("2020-10-20"),
+		"Date Time String Example": common::formatDateToString("2020-10-20T23:57:59Z")
+	}
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Results" doc:id="9edca11c-ab66-4a3a-816d-4ffcc20e7d5f" message="#[payload]"/>
+	</flow>
+</mule>

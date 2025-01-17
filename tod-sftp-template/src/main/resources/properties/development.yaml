@@ -1,0 +1,59 @@
+keystore: 
+  path: "local.jks"
+  password: "![xKUgIUxIUOSQfD82up5YWA==]" # Please encrypt it with the encryption key being used in the project. "PASSWORD" is the current default key
+
+security:
+  basic:
+    username: "tod_user"
+    password: "![p/5rrykUfGI=]" # Please encrypt it with the encryption key being used in the project. "PASSWORD" is the template encryption password
+
+https:
+  port: "8082" # This value is mostly default, only change if you have any other specific port to be used.
+  basepath: "api/v1"
+  connection:
+    timeout: "60000" # In Milliseconds
+  reconnection:
+    frequency: "60000" # In Milliseconds
+    attempts: "5"
+  
+logging:
+  timeFormat: "yyyy-MM-dd'T'HH:mm:ss"
+  timeZone: "America/Vancouver"
+
+feature:
+  archive: "true"
+  error: "true"
+  getAll: "true"
+  getFile: "true"
+
+sftp:
+  listener:
+    cron: "*/10 * * * * ?" #Set cron to * * * * * ? 2099 to disable
+  reconnection:
+    attempts: "5"
+    frequency: "60000"  
+  timeout:
+    connection: "60000"
+    response: "60000"
+  host: "yaelsvpfwp5kg.canadacentral.azurecontainer.io"
+  port: "22"
+  username: "propeluser"
+  password: "![hIB67ey85rWcKugn1G3pyLLIw9k41CY/]"
+  basepath: "/upload/mulesoft/template_testing"
+  patterns:
+    csv: ".*\\.csv"
+    containsTest: ".*TEST.*"
+  
+cloudhub:
+  username: "xxxx"
+  password: "XXX"
+  environment: "xxxx"
+  domain: "xxxx"
+  environmentId: "xxxx"
+  reconnection:
+    frequency: "60000"
+    attempts: "5"
+  notification:
+    timestamp:
+      timezone: "America/Vancouver"
+      format: "KK:mm:ss a, MMMM dd, uuuu"

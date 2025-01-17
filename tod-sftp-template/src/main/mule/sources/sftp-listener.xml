@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	<flow name="sftp-listener" doc:id="5482a13e-37d9-4a48-b2e6-58bdabc94dfc" >
+		<sftp:listener doc:name="For-Changed-Files" doc:id="12e9223a-2780-49a8-bab6-3bdd294c3306" config-ref="SFTP_Config" directory="${sftp.basepath}" watermarkEnabled="true">
+			<scheduling-strategy >
+				<cron expression="${sftp.listener.cron}" timeZone="America/Vancouver"/>
+			</scheduling-strategy>
+		</sftp:listener>
+		<logger level="INFO" doc:name="Sample SFTP Files Retrieved" doc:id="fed162d5-d3fc-467e-a027-69abebb90117" message="SFTP Files Retrieved @ #[(now() &gt;&gt; Mule::p('logging.timeZone')) as String{format: Mule::p('logging.timeFormat')}]"/>
+		<flow-ref doc:name="Send to Routing" doc:id="0f213bf5-0380-4a3c-b1c8-77e7361e40fa" name="routing-main"/>
+		<error-handler ref="Common_Error_Handler" />
+	</flow>
+</mule>

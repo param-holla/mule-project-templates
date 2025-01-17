@@ -1,0 +1,46 @@
+keystore: 
+  path: "local.jks"
+  password: "![vyHPzW2KANMj3X1Q/+a/cQ==]" # Please encrypt it with the encryption key being used in the project. "PASSWORD" is the current one
+
+logging:
+  timeFormat: "yyyy-MM-dd'T'HH:mm:ss"
+  timeZone: "America/Vancouver"
+  
+queues:
+  reconnection:
+    attempts: "5"
+    frequency: "60000"  
+  
+process:
+#Copy this sample process and paste below for how ever many seperate schedulers you may need.
+  sample_process1: 
+    log:
+      catagory: "com.tod.sample_process1"
+    schedule:
+      cron: "* 10 * * * ?"
+      timezone: "America/Vancouver"
+    host: "localhost"
+    port: "8085"
+    base: "api/v1"
+    path:
+      sample1: "/sample1"
+    reconnection:
+      attempts: "5"
+      frequency: "60000"
+    timeout:
+      connection: "30000"
+      idle: "30000"
+  
+cloudhub:
+  username: "xxxx"
+  password: "XXXX"
+  environment: "xxxx"
+  domain: "xxxx"
+  environmentId: "xxxx"
+  reconnection:
+    frequency: "60000"
+    attempts: "5"
+  notification:
+    timestamp:
+      timezone: "America/Vancouver"
+      format: "KK:mm:ss a, MMMM dd, uuuu"

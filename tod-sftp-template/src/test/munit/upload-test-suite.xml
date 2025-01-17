@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<munit:config name="upload-test-suite.xml" />
+	<munit:test name="upload-successful-Test" doc:id="4f3a2dd9-b349-45b0-a45b-66cfcc5f54f7" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock File Write" doc:id="e75e1095-ce9b-4573-98cc-dea7b6f58fee" processor="sftp:write" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="7fd73103-81dd-47f5-8650-3ca43c84c3e1" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="7fd73103-81dd-47f5-8650-3ca43c84c3e1" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="7fd73103-81dd-47f5-8650-3ca43c84c3e1" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<ee:transform doc:name="Set Payload" doc:id="f633634d-4ba8-42b7-8713-a051ccf48c55" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+readUrl('classpath://sample-data/sftp_post_upload.json','application/json')]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Post Upload" doc:id="4860a7b9-2546-437f-82eb-013e9ffe3db2" name="post:\file\upload:tod-sftp-template-config" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="0e2694ae-4cff-4908-8003-83f94008fdea" actual="#[payload]" expected='#[{&#10;  "id": "Project proposal.pdf",&#10;  "created": true,&#10;  "success": true,&#10;  "message": "Successfully created file at: /upload/mulesoft/template_testing/pdfs/Project proposal.pdf"&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+
+<munit:test name="upload-error-Test" doc:id="2890f8bb-dfb1-4493-94a6-be088d0f2c3e" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock File Write" doc:id="f3fbb60b-83b0-44c9-b54c-f1b2d0e3a10d" processor="sftp:write">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="7fd73103-81dd-47f5-8650-3ca43c84c3e1" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="7fd73103-81dd-47f5-8650-3ca43c84c3e1" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="7fd73103-81dd-47f5-8650-3ca43c84c3e1" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="SFTP:ACCESS_DENIED" />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Cloudhub Notification" doc:id="23a11215-7b62-4796-a177-881ca8e04d07" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Create Cloudhub Notification" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="97fb9952-7df9-4e24-a6bf-9bd25ff34858" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		
+</munit:behavior>
+		<munit:execution >
+			<ee:transform doc:name="Set Payload" doc:id="5faf203d-2ace-41db-bc95-b47b17ea0cf8" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+readUrl('classpath://sample-data/sftp_post_upload.json','application/json')]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Post Upload" doc:id="6534cbcf-44df-4e55-b425-60c98c9d249e" name="post:\file\upload:tod-sftp-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="d39faecd-3903-4655-ad06-24b4edf3864d" actual="#[payload]" expected='#[{&#10;  "id": "Project proposal.pdf",&#10;  "created": false,&#10;  "success": false,&#10;  "message": "Failed during Error Processing on the CREATE operation. Error Message: "&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+
+</mule>

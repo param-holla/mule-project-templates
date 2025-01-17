@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="health-check-test-suite.xml" />
+	<munit:test name="health-check-test-suite-check-heartbeatTest" doc:id="7d39eb91-a760-4d7d-bc40-003ebfe56316" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock SF" doc:id="16204966-9300-434b-bbf6-d2e0e1a7fb22" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f49af10a-7b73-4d24-9af3-162a3651e88c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock DB" doc:id="f2cd64c5-5a7c-484a-b0eb-7e78d42c2845" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b86066a3-2c45-46b0-9baf-037ffdbd81d5" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to check-heartbeat" doc:id="45129907-5921-4598-8860-f0e609ae9a5c" name="get:\heartbeat:tod-process-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="d3f7c89a-e18b-491b-b50f-f945832fe5c7" actual="#[payload]" expected='#[{&#10;    "Salesforce": "UP",&#10;    "Database": "UP"&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+
+<munit:test name="health-check-db-failure-test-suite-check-heartbeatTest" doc:id="e1866308-b75b-410f-939b-19caf56d5d81" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock SF" doc:id="20a11b01-fc22-419f-80a7-74a639eed932" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f49af10a-7b73-4d24-9af3-162a3651e88c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock DB" doc:id="22feb1ad-097a-4a85-8d02-c3607345797d" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b86066a3-2c45-46b0-9baf-037ffdbd81d5" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to check-heartbeat" doc:id="48c8563f-b109-42c6-a714-90f4540ed5d2" name="get:\heartbeat:tod-process-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="48a48e87-b422-4c9f-b7a3-5f69bc1e46fb" actual="#[payload]" expected='#[{&#10;  "Salesforce": "UP",&#10;  "Database": "Failed due to: "&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+
+
+<munit:test name="health-check-sf-failure-test-suite-check-heartbeatTest" doc:id="9415d740-69cb-4104-bdb5-fb22d88636bc" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock SF" doc:id="5e613957-750f-4d5d-ac47-133ad4fa5572" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f49af10a-7b73-4d24-9af3-162a3651e88c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock DB" doc:id="31f57535-6524-4097-9fbc-0d7a7769b9b7" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b86066a3-2c45-46b0-9baf-037ffdbd81d5" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to check-heartbeat" doc:id="62b0bfd2-7530-4909-a623-f8d28788af8d" name="get:\heartbeat:tod-process-template-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="cab98012-6428-400a-9efc-1ef830f04d18" actual="#[payload]" expected='#[{&#10;&#10;    "Salesforce": "Failed due to: ",&#10;&#10;    "Database": "UP"&#10;&#10;}]'/>
+		</munit:validation>
+	</munit:test>
+
+</mule>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.tod.deploy</groupId>
+	<artifactId>cloudhub-deploy-pom</artifactId>
+    <version>1.0.0</version>
+    <packaging>mule-application</packaging>
+	<name>CloudHub Deploy POM</name>
+    <properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<mule.maven.plugin.version>3.5.2</mule.maven.plugin.version>
+        <timestamp>${maven.build.timestamp}</timestamp>
+        <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.mule.tools.maven</groupId>
+				<artifactId>mule-maven-plugin</artifactId>
+				<version>${mule.maven.plugin.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+				   <cloudHubDeployment>
+                       <uri>https://anypoint.mulesoft.com</uri>
+                       <muleVersion>#{ANYPOINT_RUNTIME_VERSION}#</muleVersion>
+                       <username>#{ANYPOINT_DEVOPS_USERNAME}#</username>
+                       <password>#{ANYPOINT_DEVOPS_PASSWORD}#</password>
+                       <workerType>#{ANYPOINT_WORKER_TYPE}#</workerType>
+                       <workers>#{ANYPOINT_WORKER_NUMBER}#</workers>
+                       <applicationName>${anypoint.applicationName}</applicationName>
+                       <environment>#{ANPOINT_ENVIRONMENT_NAME}#</environment>
+                       <region>#{ANYPOINT_REGION}#</region>
+                       <objectStoreV2>#{ANYPOINT_OBJECT_STORE_V2}#</objectStoreV2>
+                       <persistentQueues>#{ANYPOINT_PERSISTENT_QUEUES}#</persistentQueues>
+                       <skipDeploymentVerification>#{ANYPOINT_SKIP_DEPLOYMENT_VERIFICATION}#</skipDeploymentVerification>
+                       <applyLatestRuntimePatch>true</applyLatestRuntimePatch>
+                       <properties>
+                           <!-- PIPELINE STANDARD PROPERTIES - CAREFUL UPDATING -->
+
+                           <!-- runtime.env is used to pick up correct application resources properties file -->
+                           <runtime.env>#{ENVIRONMENT_PREFIX}#</runtime.env>
+
+                           <!-- Sets the Runtime Encryption Key -->
+                           <runtime.key>#{RUNTIME_KEY}#</runtime.key>
+
+							<!-- Sets the Anypoint Platform Client Id and Secret -->
+							<anypoint.platform.client_id>#{ANYPOINT_PLATFORM_CLIENT_ID}#</anypoint.platform.client_id>
+                            <anypoint.platform.client_secret>#{ANYPOINT_PLATFORM_CLIENT_SECRET}#</anypoint.platform.client_secret>
+                            <anypoint.platform.base_uri>#{ANYPOINT_PLATFORM_BASE_URI}#</anypoint.platform.base_uri>
+                            
+                           <!-- standard devops properties to be viewed in cloudhub-->
+                           <applicationVersion>#{BUILD_VERSION_NUMBER}#</applicationVersion>
+                           <buildId>#{Build.buildNumber}#</buildId>
+                           <buildBranch>#{Build.SourceBranchName}#</buildBranch>
+                       </properties>
+                   </cloudHubDeployment>
+				</configuration>
+                <executions>
+                    <execution>
+                        <id>deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+	</dependencies>
+	<repositories>
+          <repository>
+            <id>anypoint-exchange-v2</id>
+            <name>Anypoint Exchange</name>
+            <url>https://maven.anypoint.mulesoft.com/api/v2/maven</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+            <id>mulesoft-releases</id>
+            <name>MuleSoft Releases Repository</name>
+            <url>https://repository.mulesoft.org/releases/</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>mulesoft-releases</id>
+            <name>mulesoft release repository</name>
+            <layout>default</layout>
+            <url>https://repository.mulesoft.org/releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+           <id>mule-public</id>
+           <url>https://repository.mulesoft.org/nexus/content/repositories/releases</url>
+        </pluginRepository>
+    </pluginRepositories>
+</project>

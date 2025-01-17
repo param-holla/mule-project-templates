@@ -1,0 +1,120 @@
+[
+  {
+    "inboundAttachmentNames": [
+      
+    ],
+    "exceptionPayload": null,
+    "inboundPropertyNames": [
+      
+    ],
+    "outboundAttachmentNames": [
+      
+    ],
+    "payload": "This is a test file. It is used for testing.",
+    "outboundPropertyNames": [
+      
+    ],
+    "attributes": {
+      "symbolicLink": false,
+      "regularFile": true,
+      "directory": false,
+      "path": "/upload/mulesoft/template_testing/archive/DummyTextFile_archived_2021-11-04-13-37-55.txt",
+      "size": 44,
+      "name": "DummyTextFile_archived_2021-11-04-13-37-55.txt",
+      "timestamp": "2021-11-03T10:36:20"
+    }
+  },
+  {
+    "inboundAttachmentNames": [
+      
+    ],
+    "exceptionPayload": null,
+    "inboundPropertyNames": [
+      
+    ],
+    "outboundAttachmentNames": [
+      
+    ],
+    "payload": "This is a new test file",
+    "outboundPropertyNames": [
+      
+    ],
+    "attributes": {
+      "symbolicLink": false,
+      "regularFile": true,
+      "directory": false,
+      "path": "/upload/mulesoft/template_testing/errors/DummyTestFile.txt",
+      "size": 23,
+      "name": "DummyTestFile.txt",
+      "timestamp": "2021-11-03T13:51:32"
+    }
+  },
+  {
+    "inboundAttachmentNames": [
+      
+    ],
+    "exceptionPayload": null,
+    "inboundPropertyNames": [
+      
+    ],
+    "outboundAttachmentNames": [
+      
+    ],
+    "payload": [
+      {
+        "index": "CSV_ROW_14",
+        "errorDescription": "Failed due to TEST. If this were a csv file, index could be the row the csv file fails at."
+      },
+      {
+        "index": "INVALID_TEXT_DOCUMENT_ERROR",
+        "errorDescription": "Failed due to TEST. This error message should match the index tag above."
+      }
+    ],
+    "outboundPropertyNames": [
+      
+    ],
+    "attributes": {
+      "symbolicLink": false,
+      "regularFile": true,
+      "directory": false,
+      "path": "/upload/mulesoft/template_testing/errors/DummyTestFile_2021-11-04-13-48-14_error_report.csv",
+      "size": 230,
+      "name": "DummyTestFile_2021-11-04-13-48-14_error_report.csv",
+      "timestamp": "2021-11-04T13:48:19"
+    }
+  },
+  {
+    "inboundAttachmentNames": [
+      
+    ],
+    "exceptionPayload": null,
+    "inboundPropertyNames": [
+      
+    ],
+    "outboundAttachmentNames": [
+      
+    ],
+    "payload": [
+      {
+        "Test_Header1": "1123",
+        "Test_Header2": "5444"
+      },
+      {
+        "Test_Header1": "11",
+        "Test_Header2": "22"
+      }
+    ],
+    "outboundPropertyNames": [
+      
+    ],
+    "attributes": {
+      "symbolicLink": false,
+      "regularFile": true,
+      "directory": false,
+      "path": "/upload/mulesoft/template_testing/temp/errors/dummyFile.csv",
+      "size": 43,
+      "name": "dummyFile.csv",
+      "timestamp": "2021-11-03T14:00:34"
+    }
+  }
+]

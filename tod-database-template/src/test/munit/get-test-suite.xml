@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="get-test-suite.xml" />
+	<munit:test name="get-test-suiteTest" doc:id="2797c704-19ba-483a-95bc-e331a1bb66e0" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Get ALL Records Request" doc:id="bd686b92-d7a6-4f6c-b7ec-abd0d5e9b485" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b0190b66-9a3c-4188-95a1-4b3e7fef0744" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://sample-data/records.json','application/json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:spy doc:name="Spy on Transformation" doc:id="752ee530-564a-489b-9559-c372e9a65a41" processor="ee:transform">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cf964d4d-b430-441a-8204-a9fb2993e476" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert-equals doc:name="Assert equals" doc:id="e857ef1b-3868-4c7d-beb7-37425d436d26" actual="#[output application/json --- payload]" expected='#[[&#10;  {&#10;    "FirstName": "Todd",&#10;    "JerseyNumber": 144,&#10;    "LastUpdated": "2020-01-01T00:00:00.000008",&#10;    "PlayerID": 13,&#10;    "LastName": "Marcus"&#10;  },&#10;  {&#10;    "FirstName": "Alan",&#10;    "JerseyNumber": 82,&#10;    "LastUpdated": "2020-01-01T00:00:00",&#10;    "PlayerID": 14,&#10;    "LastName": "Rickman"&#10;  },&#10;  {&#10;    "FirstName": "Daniel",&#10;    "JerseyNumber": 909,&#10;    "LastUpdated": "2000-04-02T12:00:00",&#10;    "PlayerID": 15,&#10;    "LastName": "Radcliff"&#10;  },&#10;  {&#10;    "FirstName": "Jason",&#10;    "JerseyNumber": 22,&#10;    "LastUpdated": "2018-01-01T00:00:00.000008",&#10;    "PlayerID": 16,&#10;    "LastName": "Todd"&#10;  }&#10;]]'/>
+				</munit-tools:before-call>
+				<munit-tools:after-call>
+					<munit-tools:assert-equals doc:name="Assert equals" doc:id="8241e218-8e46-4cd5-9dab-54c11aeb2e13" actual="#[payload]" expected='#[[&#10;  {&#10;    "firstName": "Todd",&#10;    "jerseyNumber": 144,&#10;    "lastUpdated": "2020-01-01T00:00:00.000008",&#10;    "playerID": 13,&#10;    "lastName": "Marcus"&#10;  },&#10;  {&#10;    "firstName": "Alan",&#10;    "jerseyNumber": 82,&#10;    "lastUpdated": "2020-01-01T00:00:00",&#10;    "playerID": 14,&#10;    "lastName": "Rickman"&#10;  },&#10;  {&#10;    "firstName": "Daniel",&#10;    "jerseyNumber": 909,&#10;    "lastUpdated": "2000-04-02T12:00:00",&#10;    "playerID": 15,&#10;    "lastName": "Radcliff"&#10;  },&#10;  {&#10;    "firstName": "Jason",&#10;    "jerseyNumber": 22,&#10;    "lastUpdated": "2018-01-01T00:00:00.000008",&#10;    "playerID": 16,&#10;    "lastName": "Todd"&#10;  }&#10;]]'/>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="6103b6b4-5680-487e-a528-5dcb600ae35a" >
+				<munit:attributes value='#[{&#10;	"queryParams":{&#10;		"limit": 1000&#10;	},&#10;	"uriParams": {&#10;		"table-name": "players"&#10;	}&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="a4c417d7-2dc1-4e53-97fa-33241e0a8392" name="get:\(table-name):tod-database-template-config"/>
+		</munit:execution>
+	</munit:test>
+
+	<munit:test name="get-connectivity-failed-test-suiteTest" doc:id="0694bbc7-1a5a-45c1-9a22-1e8376384424" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Get ALL Records Request" doc:id="578e07c8-f693-4b89-aee1-c09d9a45bdc9" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="b0190b66-9a3c-4188-95a1-4b3e7fef0744" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="DB:CONNECTIVITY" />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Cloudhub Notification" doc:id="8cbd74eb-0571-4a38-9810-3db380809380" processor="cloudhub:create-notification">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		
+</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="4cc0f253-0565-4837-931d-404767f741af" >
+				<munit:attributes value='#[{
+&#10;	"queryParams":{
+&#10;		"limit": 1000
+&#10;	},
+&#10;	"uriParams": {
+&#10;		"table-name": "players"
+&#10;	}
+&#10;}]' />
+			</munit:set-event>
+			<try doc:name="Try" doc:id="a5269108-f2d0-47f9-a1d6-d5c06aba945a" >
+				<flow-ref doc:name="Flow Reference" doc:id="53bf088a-ea6b-48c1-a49b-b98ab4fe7095" name="get:\(table-name):tod-database-template-config" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2ef2872d-5a1e-484d-8156-cd84e79f9d81" >
+						<logger level="INFO" doc:name="Logger" doc:id="43806ede-6c4f-4629-abc4-9501eb20bd78" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="3a21736d-5c06-4cb0-b409-7f210e33933a" actual='#[payload.message ++ "_" ++ payload.customProperties.errorType ++ "_" ++ payload.priority]' expected='#["Database Connectivity Exception has occured.\nError Message: .\nError Payload Body: No Error Payload Body_DB Connectivity Exception_ERROR"]'/>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="c2a8d248-8ba7-4dac-8ea1-ddf0c5cc3e83" actual="#[vars.httpStatus]" expected="#[500]" />
+		</munit:validation>
+	
+</munit:test>
+
+	<munit:test name="get-other-failed-test-suiteTest" doc:id="88219c7f-20b5-4025-8a07-314182830a26" >
+			<munit:behavior >
+				<munit-tools:mock-when doc:name="Mock Get ALL Records Request" doc:id="40ddd26d-2f01-4520-a13e-96113555b587" processor="db:select">
+					<munit-tools:with-attributes >
+						<munit-tools:with-attribute whereValue="b0190b66-9a3c-4188-95a1-4b3e7fef0744" attributeName="doc:id" />
+					</munit-tools:with-attributes>
+					<munit-tools:then-return >
+						<munit-tools:error typeId="DB:BAD_SQL_SYNTAX" />
+					</munit-tools:then-return>
+				
+	
+	</munit-tools:mock-when>
+				<munit-tools:mock-when doc:name="Mock Cloudhub Notification" doc:id="d86f92ce-5a5d-42af-8d2d-a471874cc6cc" processor="cloudhub:create-notification">
+					<munit-tools:with-attributes >
+						<munit-tools:with-attribute whereValue="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" attributeName="doc:id" />
+					</munit-tools:with-attributes>
+				</munit-tools:mock-when>
+			
+	</munit:behavior>
+			<munit:execution >
+				<munit:set-event doc:name="Set Event" doc:id="fc1dc057-36f4-4902-9b2e-f7fcbcce7eda" >
+					<munit:attributes value='#[{
+	&#10;	"queryParams":{
+	&#10;		"limit": 1000
+	&#10;	},
+	&#10;	"uriParams": {
+	&#10;		"table-name": "players"
+	&#10;	}
+	&#10;}]' />
+				</munit:set-event>
+				<try doc:name="Try" doc:id="328b939f-31ee-446c-b328-85270dd36b5c" >
+					<flow-ref doc:name="Flow Reference" doc:id="5d992d22-1e87-4aa1-b8d3-adcc0cac1c19" name="get:\(table-name):tod-database-template-config" />
+					<error-handler >
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="581c0da9-9710-4494-9c5a-bddf0acf17f2" >
+							<logger level="INFO" doc:name="Logger" doc:id="a2ec0e19-e126-4c7c-9f5c-09949165a9d1" />
+						</on-error-continue>
+					</error-handler>
+				</try>
+			</munit:execution>
+			<munit:validation >
+				<munit-tools:assert-equals doc:name="Assert equals" doc:id="1af8cee3-aeac-4097-bb31-2cd52d0c5a0f" actual='#[payload.message ++ "_" ++ payload.customProperties.errorType ++ "_" ++ payload.priority]' expected='#["Database Exception has occured.\nError Message: .\nError Payload Body: No Error Payload Body_DB Exception_ERROR"]'/>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="e7dcf5e9-1afb-42d2-985b-0fe88a088057" actual="#[vars.httpStatus]" expected="#[500]" />
+			
+</munit:validation>
+		
+	</munit:test>
+
+	<munit:test name="get-unhandled-failed-test-suiteTest" doc:id="6ab0c95e-23fb-4641-806f-756a4e4a5dc3" >
+			<munit:behavior >
+				<munit-tools:mock-when doc:name="Mock Get ALL Records Request" doc:id="2f94617e-40a7-4522-8a37-3aac0fc443ad" processor="db:select">
+					<munit-tools:with-attributes >
+						<munit-tools:with-attribute whereValue="b0190b66-9a3c-4188-95a1-4b3e7fef0744" attributeName="doc:id" />
+					</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="CUSTOM:UNHANDLEABLE" />
+				</munit-tools:then-return>
+				
+	
+	
+</munit-tools:mock-when>
+				<munit-tools:mock-when doc:name="Mock Cloudhub Notification" doc:id="9f61309f-9106-4b94-a638-53ac3cb3e44c" processor="cloudhub:create-notification">
+					<munit-tools:with-attributes >
+						<munit-tools:with-attribute whereValue="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" attributeName="doc:id" />
+					</munit-tools:with-attributes>
+				</munit-tools:mock-when>
+			
+	</munit:behavior>
+			<munit:execution >
+				<munit:set-event doc:name="Set Event" doc:id="4fa79069-795f-4b96-8362-b210cec2bdcd" >
+					<munit:attributes value='#[{
+	&#10;	"queryParams":{
+	&#10;		"limit": 1000
+	&#10;	},
+	&#10;	"uriParams": {
+	&#10;		"table-name": "players"
+	&#10;	}
+	&#10;}]' />
+				</munit:set-event>
+				<try doc:name="Try" doc:id="dd793119-1325-4472-a01c-774f6fc346c6" >
+					<flow-ref doc:name="Flow Reference" doc:id="011ce815-4b2c-4df3-bfbe-de9c4bbdfddd" name="get:\(table-name):tod-database-template-config" />
+					<error-handler >
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="b9a80b7b-9834-4be2-8ddd-1323308b8933" >
+							<logger level="INFO" doc:name="Logger" doc:id="6844e9de-0b40-413e-807c-46472382121a" />
+						</on-error-continue>
+					</error-handler>
+				</try>
+			</munit:execution>
+			<munit:validation >
+				<munit-tools:assert-equals doc:name="Assert equals" doc:id="590f6358-90c6-4a4b-b3cb-92c64ac6e078" actual='#[payload.message ++ "_" ++ payload.customProperties.errorType ++ "_" ++ payload.priority]' expected='#["An Unhandled Exception has occured.\nError Message: No value present.\nError Payload Body: No Error Payload Body_Unhandled Exception_ERROR"]'/>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="309d0313-4051-4ba6-bc89-ffe3655351fa" actual="#[vars.httpStatus]" expected="#[500]"/>
+			
+</munit:validation>
+		
+	</munit:test>
+
+
+	<munit:test name="get-filtered-test-suiteTest" doc:id="ffff7d06-4cec-42d3-8836-2b33295e9deb" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Get ALL Records Request" doc:id="80c10cb7-0fc3-4a2a-81e1-2eaa16264f14" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="0ca3c926-6680-47c5-b617-1aaf4e9b5421" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://sample-data/records.json','application/json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:spy doc:name="Spy on Query Creation" doc:id="3f800afc-df79-41c9-b212-0e8ca26a2223" processor="ee:transform">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="16c4099d-7852-4c69-997c-51e106d5fdf1" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:after-call >
+					<munit-tools:assert-equals doc:name="Assert Query Body" doc:id="0171bc15-68e1-4ba9-a520-d2fed6592d86" actual="#[payload.body]" expected='#["SELECT * FROM players WHERE \"LastName\" in (:value0)"]'/>
+					<munit-tools:assert-equals doc:name="Assert Attributes" doc:id="6a2dc672-9421-4e12-88e0-763e9b044fc7" actual="#[payload.attributes]" expected='#[{&#10;    "value0": "Todd"&#10;  }]'/>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+		
+</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="e2e754cc-c71f-4126-9aec-7aec67f866ad" >
+				<munit:attributes value='#[{&#10;&#10;	"queryParams":{&#10;		"LastName": "Todd"&#10;	},&#10;&#10;	"uriParams": {&#10;		"table-name": "players"&#10;	}&#10;&#10;}]' />
+
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="83d45d99-ebc4-4cf0-9375-bebffbd037ce" name="get:\(table-name)\filter:tod-database-template-config"/>
+		</munit:execution>
+	</munit:test>
+
+<munit:test name="get-delta-test-suiteTest" doc:id="547c6bfd-a5f9-40d9-84f1-4e98ea5bbc72" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock Get Records Request" doc:id="aad1bc37-02c4-414b-9fc3-0b6a9825ac83" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="ff5573ff-d630-4199-99b1-cab8e3fde3d3" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://sample-data/records.json','application/json')]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:spy doc:name="Spy on Query Creation" doc:id="4d725bbf-afa7-463c-b479-08af4f396c53" processor="ee:transform">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Build Where Clause" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="ff9d38c5-0408-481c-9a26-8953288c7fb0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:after-call >
+					<munit-tools:assert-equals doc:name="Assert Query Body" doc:id="5ac065ac-2afd-4d1c-8349-a37a24a1d3d4" actual="#[payload]" expected='#["SELECT * FROM players WHERE \"LastUpdated\" &gt; :date"]'/>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+		
+</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="13414b6d-84d4-498f-9346-e8d63ffe20f6" >
+				<munit:attributes value='#[{&#10;&#10;	"queryParams":{&#10;		"field_name": "LastUpdated",&#10;		"watermark":"2015-01-01 00:00:00.000000"&#10;	},&#10;&#10;	"uriParams": {&#10;		"table-name": "players"&#10;	}&#10;&#10;}]' />
+
+
+			</munit:set-event>
+			<flow-ref doc:name="Flow Reference" doc:id="adbe428e-3115-4d5d-bd53-8df9b8753ed6" name="get:\(table-name)\delta:tod-database-template-config"/>
+		</munit:execution>
+	</munit:test>
+
+
+</mule>

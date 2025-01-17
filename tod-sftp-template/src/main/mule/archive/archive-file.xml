@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="archive-file-by-name" doc:id="2382eccb-2b80-443e-b3e3-5dcff835a388" >
+		<flow-ref doc:name="Build Variables" doc:id="bb2ecca8-8b64-433e-b265-649b1b64b6ca" name="archive-build-variables"/>
+		<logger level="INFO" doc:name="Log Path Data" doc:id="dd1c00f7-05dd-422f-a4d1-54487cad8a5d" message='#[{&#10;	"Source File Path": payload.filePath,&#10;	"Target File Path": vars.targetPath&#10;}]'/>
+		<sftp:move doc:name="Archive File" doc:id="d53a27e4-3676-4a6e-a951-30ed653e6867" config-ref="SFTP_Config" sourcePath="#[payload.filePath]" targetPath='#[vars.targetPath]' renameTo='#[vars.renamedFile]' />
+		<ee:transform doc:name="Build Summary Message" doc:id="4dc93249-7456-4dcd-8397-3cfb3012e321" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  id: vars.fileName,
+  created: true,
+  success: true,
+  message: "File was succesfully archived"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Successfully Archived" doc:id="0791a6de-c43c-4404-a081-78bb9da10972" message='Successfully Archived' />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1ace4988-565e-4727-86ad-95c65ac6cd4d" type="SFTP:ACCESS_DENIED, SFTP:CONNECTIVITY, SFTP:FILE_ALREADY_EXISTS, SFTP:FILE_LOCK, SFTP:ILLEGAL_CONTENT, SFTP:ILLEGAL_PATH, SFTP:RETRY_EXHAUSTED" >
+				<flow-ref doc:name="Raise SFTP Cloudhub Notification" doc:id="8231eca6-cb8d-48a5-80fd-52320f7ff48e" name="sftpConnectivityException" />
+				<ee:transform doc:name="Build Failure Message" doc:id="f6fc3e92-3946-4591-a228-8abe295b5ecc" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  id: vars.fileName,
+  created: false,
+  success: false,
+  message: "File failed to archive. Error Message: " ++ (error.detailedDescription default "No Additional Information")
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="12b63d20-173b-439a-b39e-514cfd42c973" >
+				<ee:transform doc:name="Build Failure Message" doc:id="400ed533-7d99-4324-a0b1-82e3292746d9" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  id: vars.fileName,
+  created: false,
+  success: false,
+  message: "File failed to archive. Error Message: " ++ (error.detailedDescription default "No Additional Information")
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		
+		</error-handler>
+	</flow>
+	<sub-flow name="archive-build-variables" doc:id="596410d2-9307-4e39-9a64-e93e6c0d6a27" >
+		<set-variable value="#[payload.fileName]" doc:name="Set Filename" doc:id="4a3b7fb2-4a61-430b-bacb-7ddf4a74564d" variableName="fileName" />
+		<set-variable value='#[output application/json &#10;&#10;--- &#10;&#10;dw::core::Strings::substringAfterLast(payload.fileName, ".")]' doc:name="Set Extension" doc:id="a33b75d1-87b4-4771-8c83-2a78613adcf8" variableName="extension" />
+		<set-variable value='#[output application/json &#10;&#10;import * from dw::core::Strings&#10;&#10;---&#10;&#10;substringBeforeLast(payload.fileName, ".") &#10;&#10;++ "_archived_" &#10;&#10;++ (now() as String {format: "yyyy-MM-dd-HH-mm-ss"}) &#10;&#10;++ "." &#10;&#10;++ vars.extension]' doc:name="Set Renamed File Name" doc:id="0241aa85-8593-4533-996c-d0c2f7247404" variableName="renamedFile" />
+		<set-variable value='#[dw::core::Strings::substringBeforeLast(payload.filePath, "/") ++ "/archive"]' doc:name="Set Target Path" doc:id="848dda00-01e6-4ee9-86ec-6645a1d48a0f" variableName="targetPath" />
+	</sub-flow>
+</mule>

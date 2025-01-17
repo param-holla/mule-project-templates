@@ -1,0 +1,26 @@
+https:
+  port: "8082" # This value is mostly default, only change if you have any other specific port to be used.
+  basepath: "api/v1"
+  connection:
+    timeout: "60000" # In Milliseconds
+  reconnection:
+    frequency: "60000" # In Milliseconds
+    attempts: "5"
+security:
+  basic:
+    username: "tod_user"
+    password: "![p/5rrykUfGI=]" # Please encrypt it with the encryption key being used in the project. "PASSWORD" is the template encryption password
+
+keystore: 
+  path: "local.jks"
+  password: "![xKUgIUxIUOSQfD82up5YWA==]" # Please encrypt it with the encryption key being used in the project. "PASSWORD" is the template encryption password
+  
+  
+salesforce:
+  username: "XXXX"
+  password: "![XXXX]"
+  token: "![XXXX]"
+  url: "https://test.salesforce.com/services/Soap/u/51.0"
+  reconnection:
+    frequency: "60000" # In Milliseconds. Set this value when you want a reconnection to happen in a single session
+    attempts: "5" # No of Attempts for reconnection to happen. Mule will throw connection error when attempts exhausts.

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="get-filtered-records" doc:id="0cae66a5-9230-483a-b842-e5463c71b8eb" >
+		<logger level="INFO" doc:name="Retrieving Records" doc:id="41622339-6e30-4488-aaf0-40d671418977" message="Retrieving Records from #[attributes.uriParams.'table_name']." />
+		<ee:transform doc:name="Build WHERE Clause" doc:id="16c4099d-7852-4c69-997c-51e106d5fdf1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+
+fun generateFields(key, val, index) = {
+	("value" ++ index): 
+	if(typeOf(val) == Number)
+		val
+	else
+		"" ++ ((val)  splitBy "," joinBy ",") ++ ""
+	
+    //("field" ++ index): "\"" ++ (key as String) ++ "\"",
+    
+}
+
+---
+{
+	"body": "SELECT * FROM " ++ "$(attributes.uriParams.'table-name')" ++ 
+" WHERE " ++ ((attributes.queryParams mapObject ((value, key, index) -> 
+"":"\"" ++ (key as String) ++ "\" in (:value" ++ index ++ ")")) pluck $ joinBy " and "),
+    "attributes": attributes.queryParams mapObject ((value, key, index) -> generateFields(key, value, index))
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:select doc:name="Select Records from Database" doc:id="0ca3c926-6680-47c5-b617-1aaf4e9b5421" config-ref="Database_Config" >
+			<db:sql ><![CDATA[#[payload.body as String]]]></db:sql>
+			<db:input-parameters ><![CDATA[#[payload.attributes]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Keys to Camel Case" doc:id="61406cec-7303-4e6e-aa00-567f5d8aad43" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dataweave::common
+---
+camelizeKeys(payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Returning Records" doc:id="fd04a471-f549-438e-8be8-a2e5cd2c81c8" message="#[sizeOf(payload)] records retrieved." />
+	</sub-flow>
+</mule>

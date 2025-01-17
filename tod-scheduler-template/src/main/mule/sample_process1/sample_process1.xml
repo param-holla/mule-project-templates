@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="sample_process1-main" doc:id="5642a6be-bf24-4f9c-b5ee-4434c95cc7f6" >
+		<ee:transform doc:name="Set Payload to Path" doc:id="ea668359-998e-4487-b4f3-e68d518746b4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+Mule::p('process.sample_process1.path.sample1')
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<vm:publish doc:name="Publish To Sample_Process1 Queue" doc:id="85383482-6990-47b9-8451-3a195f5010fe" config-ref="default_queue_config" queueName="sample_process1_queue" timeout="60" sendCorrelationId="NEVER">
+		</vm:publish>
+	</sub-flow>
+	<flow name="sample_process1-request" doc:id="1875acd7-4747-42e1-98a8-2c223d3c1901" >
+		<vm:listener queueName="sample_process1_queue" doc:name="Listen on Sample_Process1 Queue" doc:id="7f1a7f57-9c7f-4250-a17c-69cca09217a7" config-ref="default_queue_config" primaryNodeOnly="true" timeout="60">
+			<reconnect frequency="${queue.reconnection.frequency}" count="${queue.reconnection.frequency}" />
+		</vm:listener>
+		<logger level="INFO" doc:name="Entry Retrieved from Queue" doc:id="ae91dd87-21c8-46c8-9481-996840dd9af8" message="Entry Retrieved from Sample_Process1_Queue. Path: #[payload]" category="${process.sample_process1.log.catagory}"/>
+		<http:request method="GET" doc:name="POST to Sample_Process PAPI" doc:id="4d83d94b-d46a-4b5b-8591-b245628965b1" config-ref="Sample_Process-HTTP-Request" path="#[payload]" responseTimeout="9999999"/>
+		<logger level="INFO" doc:name="Log Response from PAPI" doc:id="f80fdbd8-078e-48e2-aeff-546c60f397a3" message="Response from PAPI:\n #[write(payload, 'application/json')]" category="${process.sample_process1.log.catagory}"/>
+		<error-handler ref="Common_Error_Handler" />
+	</flow>
+</mule>

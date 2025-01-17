@@ -1,0 +1,5 @@
+{
+  "minMuleVersion": "4.3.0-20200824",
+  "secureProperties": ["runtime.key","salesforce.password", "keystore.password", "security.basic.password", "salesforce.token"]
+
+}

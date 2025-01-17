@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+    <flow name="api-main">
+        <http:listener config-ref="batch-api-httpsListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <logger level="INFO" doc:name="Entry Log" doc:id="94130997-7499-4946-ba2f-00bc8cb5941c" message='#["Call Entry to " ++ attributes.method default "" ++ ":&lt;context&gt;" ++ attributes.requestUri default ""]' category="START" />
+		<apikit:router config-ref="api-config" />
+		<logger level="INFO" doc:name="Exit Log" doc:id="a039af3e-cbc1-40f0-bce7-c57933b1b565" message='#["Call Exit from " ++ attributes.method default "" ++ ":&lt;context&gt;" ++ attributes.requestUri default ""]' category="END" />
+    </flow>
+    <flow name="get:\batch\status:api-config">
+        <flow-ref doc:name="check-batch-status" doc:id="77c27f90-04f2-4ae0-861a-ad28ce18e050" name="check-batch-status" />
+        <set-payload value="#[output application/json --- payload]" doc:name="Set Payload" doc:id="85cd9f39-5dd7-46a3-86ab-da8181795af9" />
+    </flow>
+    <flow name="delete:\batch\status:api-config">
+        <flow-ref doc:name="clear-batch-status" doc:id="6b361432-11e8-43b6-b1cd-4f0e782474fb" name="clear-batch-status" />
+    </flow>
+    <flow name="delete:\batch\latest\status:application\json:api-config">
+        <flow-ref doc:name="clear-batch-status" doc:id="639aee5c-fa8e-418b-b54f-9c83f31144f5" name="clear-batch-status" />
+    </flow>
+    <flow name="get:\api-status:api-config">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:name="API Status">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "OK",
+  version: "v1",
+  time: now()
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\batch:api-config">
+        <flow-ref doc:name="batch-api-implementation-main" doc:id="3e7a4451-6e8f-4109-aa9c-cb8dda313e73" name="batch-api-implementation-main" />
+    </flow>
+    <flow name="get:\batch\latest\failed-records:api-config">
+        <flow-ref doc:name="Retrieve Failures" doc:id="21f9c963-4402-4a5b-b362-fd79c0fbf193" name="retrieve-failures" />
+    </flow>
+    <flow name="get:\batch\sample-data:api-config">
+        <flow-ref doc:name="batch-api-implementation-get-data" doc:id="b4ff98a8-6b11-4cd7-a333-5392a5f6d83b" name="batch-api-implementation-get-data" />
+    </flow>
+    <flow name="get:\batch\latest\status:api-config">
+        <flow-ref doc:name="check-batch-status" doc:id="3fd6664c-0f0d-404d-8d20-a8d93a8f88cb" name="check-batch-status" />
+        <set-payload value="#[output application/json --- payload]" doc:name="Set Payload" doc:id="d661b0c2-46e2-4246-a4dd-130842be198f" />
+    </flow>
+</mule>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<flow name="check-heartbeat" doc:id="7ac5526f-f80a-4838-a48a-192c0befa156" >
+		<sftp:list doc:name="List" doc:id="543e58c6-51b7-4f0c-aef4-356b75e7db15" config-ref="SFTP_Config" directoryPath="/">
+            <sftp:matcher pathPattern="/force-failure/" />
+        </sftp:list>
+		<ee:transform doc:name="Set Successful Heart Beat" doc:id="04ab7225-29e5-4b67-a8d9-9a033af5ba23">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Heartbeat Successful",
+	"timestamp": (now() >> Mule::p('logging.timeZone')) as String{format: Mule::p('logging.timeFormat')}
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5933357a-8ac1-4805-95a3-a005295d4ecf" >
+				<ee:transform doc:name="Set bad heart beat" doc:id="96c9d109-4394-44d5-b664-0c10e702ce7d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Heartbeat Failed due to: " ++ (error.detailedDescription default "No Error Info Available"),
+	"timestamp": (now() >> Mule::p('logging.timeZone')) as String{format: Mule::p('logging.timeFormat')}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+		
+</mule>

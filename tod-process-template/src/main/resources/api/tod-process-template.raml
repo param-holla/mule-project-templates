@@ -1,0 +1,24 @@
+#%RAML 1.0
+title: tod-papi-template
+description: This application is the template for a Process API
+version: v1
+mediaType: 
+  - application/json
+protocols:
+  - HTTPS
+
+/heartbeat:
+  get:
+    description: Endpoint available just to confirm when pinging PAPI from XAPI
+    responses:
+      200:
+        body:
+          application/json:
+
+/accountSync:
+  get:
+    description: Triggering Endpoint for Account Sync
+    responses:
+      200:
+        body:
+          application/json:

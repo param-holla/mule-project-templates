@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="get-file-list-main" doc:id="4853e6fb-d64b-477f-b981-1a01bf69ef6a" >
+		<ee:transform doc:name="Build List Path" doc:id="cee6fae0-f8e5-400f-9be7-7618c80db949" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json 
+--- 
+if((attributes.queryParams.filter) != null and attributes.queryParams.filter != '') 
+	Mule::p('sftp.basepath') ++ attributes.queryParams.filter
+else
+	Mule::p('sftp.basepath')]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Retrieving File List" doc:id="3c1f2dc2-bd48-49ef-9a81-68ff88da0a00" message='Retrieving File List for Path: #[output application/java --- payload]' />
+		<sftp:list doc:name="List ALL files" doc:id="1dd08152-47a9-423d-8ead-6b98eaca87f3" config-ref="SFTP_Config" recursive="true" directoryPath="#[payload]">
+			<sftp:matcher directories="EXCLUDE" symLinks="EXCLUDE" />
+		</sftp:list>
+		<ee:transform doc:name="Build File Information Objects" doc:id="858942c7-501a-487b-9a1a-94f6516667a7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+
+fun generateFileInformationObject(file: Object) = 
+{
+	"fileType": (file.attributes.name substringAfterLast  "."),
+	"fileName": file.attributes.name,
+	"filePath": file.attributes.path
+}
+---
+payload map (v, i) -> generateFileInformationObject(v)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Returning Files" doc:id="142b5725-9d9f-48b0-af9d-f74a54b364ea" message="Returning #[sizeOf(payload)] file information objects."/>
+	</sub-flow>
+	<sub-flow name="get-specific-file-by-url" doc:id="39c3addb-e757-4395-97c6-e0109073bcfb" >
+		<logger level="INFO" doc:name="Retrieving File by Path" doc:id="dd942486-4057-465f-8d0c-e205100ac492" message="Retrieving File: #[attributes.queryParams.'file_path']"/>
+		<sftp:read doc:name="Get File by Path" doc:id="f17f0af9-b4b2-4d24-b8ad-6cf3fc1b7105" config-ref="SFTP_Config" path="#[attributes.queryParams.'file_path']"/>
+		<ee:transform doc:name="Build Response Object" doc:id="c33904d7-1d42-4643-ba80-dcdc997bfe16" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+import * from dw::core::Binaries
+
+fun generateFileDataObject(fileData, attributes: Object) = 
+{
+	"fileType": (attributes.name substringAfterLast  "."),
+	"fileName": attributes.name,
+	"filePath": attributes.path,
+	"base64Encoded": toBase64(fileData as Binary)
+}
+---
+generateFileDataObject(payload, attributes)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Response" doc:id="901f3a68-1327-4e9a-8615-654df87c3e7a" message="Returning Encoded File"/>
+	</sub-flow>
+</mule>

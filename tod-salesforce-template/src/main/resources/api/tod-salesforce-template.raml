@@ -1,0 +1,116 @@
+#%RAML 1.0
+title: dynamic-salesforce-sapi
+version: v1
+protocols: [HTTPS,HTTP]
+mediaType: [application/json]
+
+traits:
+  error_response: !include traits/common-error-responses.raml
+
+/health:
+
+  description: This method is used to check the health and connection with the api
+  get:
+    description: We will fetch a static custom payload to check the health
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+                {
+                 "message": "Connectivity with SFDC SAPI is a success"
+                }  
+
+/{object-name}:
+  is: [error_response]
+  description: This resource supports Create, Fetch, update and upsert functionalities.
+  
+  get:
+    description: This method is used to fetch respective object payload from sfdc.
+    queryParameters:
+      fetch_size:
+        required: true
+        type: number
+        description: It is similar to "Limit" keyword in salesforce and basically limits the amount of data being called.
+        example: 2
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/get_account_example.json
+            description: The response will depend on the object being called.The example used below is just an example and the structure will be different for different objects.
+            type: array 
+  post:
+    description: This method is used to create records in sfdc.
+    body:
+      application/json:
+        type: array
+    responses:
+      200:
+        body:
+          application/json:
+            type: array
+            description: The response will have a standard structure, although input_request will change.
+            example: !include examples/create_upsert_records_example.json
+
+  patch:
+    description: This method is used to upsert records in sfdc.
+    body:
+      application/json:
+        type: array
+    queryParameters:
+        external_id_name:
+          required: true
+          type: string
+          example: Zendesk_Id__c
+          description: This should be the exact name of the field you want to use as an upsert key. Make sure this field is set as external key within the respective org.
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/create_upsert_records_example.json
+
+  put:
+    description: This method is used to update records in sfdc.
+    body:
+      application/json:
+        type: array
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/create_upsert_records_example.json
+  /filter:
+    is: [error_response]
+    description: This method is used to fetch the filtered records from respective object payload from sfdc. This is like a "where" clause in soql. For example, If we need to fetch an contact with Name "Hemant sharma" then "Name" needs to be passed in the query param with the value to be searched.
+    
+    get:
+      queryParameters:
+        field_name:
+          required: false
+          type: any
+          example: ('Verma Industries')
+          description: The query param should be the exact api name of the field as in salesforce for it work. The query param can support multiple values too but they need to be comma separated and needs to be passed in the exact format as in the example. This is like an "in" statement in salesforce. For number type fields the values need not be enclosed in inverted commas.
+            
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/get_account_example.json
+              description: The response will depend on the object being called.The example used below is just an example and the structure will be different for different objects.
+              type: array  
+    /delta:
+        is: [error_response]
+        description: This method is used to fetch new and updated records wrt the timestamp provided.    
+        get:
+          queryParameters:
+            LastModifiedDate:
+              required: true
+              type: string
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include examples/get_account_example.json
+                  description: The response will depend on the object being called.The example used below is just an example and the structure will be different for different objects.
+                  type: array 

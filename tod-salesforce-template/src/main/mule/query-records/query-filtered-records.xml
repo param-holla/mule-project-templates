@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="query-filtered-recordsFlow"
+		doc:id="ee251064-7e79-438e-91d8-28ed2437219c">
+		<set-variable
+			value="#[attributes.uriParams.'object-name']"
+			doc:name="Set Object Name"
+			doc:id="2180fc5f-29e1-4ca9-94f2-eb423af10def"
+			variableName="filter_sfdc_object_name" />
+		<set-variable value="#[attributes.queryParams]" doc:name="Set QueryParams" doc:id="6dc9308f-d7e1-4c36-beec-42e9bc6862e6" variableName="queryparams"/>
+		<salesforce:describe-sobject type="#[vars.filter_sfdc_object_name]" doc:name="Describe sobject" doc:id="fcab3013-3f65-43c3-ae8c-932cac8f91cb" config-ref="Salesforce_Config" />
+		<set-variable value="#[payload.fields.name]" doc:name="Save Fields Name" doc:id="37be7be0-cef5-4b9b-a0ba-74db12e051a0" variableName="salesforceFieldNames"/>
+		<set-variable value="#[vars.queryparams pluck $$]" doc:name="queryParamFieldNames" doc:id="b4be4712-c7ab-48dd-bf89-6507a738769f" variableName="queryParamFieldNames"/>
+		<choice doc:name="Choice" doc:id="e3320063-49d9-405c-954e-4dfb44208400" >
+			<when expression="#[!isEmpty(vars.salesforceFieldNames filter (vars.queryParamFieldNames contains $))]">
+				<ee:transform doc:name="Creating Query for SF Search" doc:id="73c93987-c981-4204-a720-da81b0f17e7f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output text/plain
+
+var whereClause = ((vars.queryparams pluck ($$ ++ " in " ++ $)) reduce ((item, accumulator) -> accumulator ++ " AND " ++ item))
+---
+"SELECT " ++ (payload.fields.name joinBy ", ")
+++ " FROM " ++ vars.filter_sfdc_object_name ++ " WHERE " ++ whereClause ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<salesforce:query doc:name="Query sObject" doc:id="3a009cee-0616-41b8-a6c5-801a97a739f2" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query>#[payload]</salesforce:salesforce-query>
+		</salesforce:query>
+				<ee:transform doc:name="To Json" doc:id="25f6eb04-d7d3-499d-ab89-4d630d795834">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="400: Bad Request" doc:id="504d7484-0d28-4d46-aee8-d33d03b58e49" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Message": "One of the queryParams provided does not exists in salesforce as a field.",
+	"Available Fields": vars.salesforceFieldNames
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Get-Filtered Operation Complete" doc:id="13d91ddc-e3b5-48f6-888d-78e7047492e8" message="Get-Filtered Operation Complete"/>
+	</flow>
+</mule>

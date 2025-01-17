@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<error-handler name="Common_Error_Handler">
+		            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request: " ++ (error.detailedDescription default "no additional information available")}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found: " ++ (error.detailedDescription default "no additional information available")}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed: " ++ (error.detailedDescription default "no additional information available")}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable: " ++ (error.detailedDescription default "no additional information available")}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type: " ++ (error.detailedDescription default "no additional information available")}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented: " ++ (error.detailedDescription default "no additional information available")}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+		
+		
+		
+		
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="588bec23-c734-4298-a586-e2a73bc22024" type="DB:CONNECTIVITY">
+			<logger level="INFO" doc:name="Error Response Payload" doc:id="e33e8deb-8805-4e83-b89d-842bd9ef708b" message="Error Payload: #[write(error.muleMessage.payload, 'application/json')]" />
+			<ee:transform doc:name="Build Cloudhub Message Structure" doc:id="22959e27-2ae3-4df1-aedd-aec0aaaa5370" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Database Connectivity Exception has occured.\nError Message: " ++ 
+(error.detailedDescription default (error.description default "No Error Details Available")) ++ 
+".\nError Payload Body: " ++ (error.muleMessage.payload default "No Error Payload Body"),
+	"customProperties": {
+		"timestamp": (now() >> Mule::p('logging.timeZone')) as String{format: Mule::p('logging.timeFormat')},
+		"errorType": "DB Connectivity Exception"
+	},
+	"priority": "ERROR"
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+500]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Create Cloudhub Notification" doc:id="f2f82566-9b62-4180-a3ad-92daeeb4136a" name="cloudhub-notification" />
+
+		</on-error-propagate>
+        
+        <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="90e17f54-1885-4981-b5d4-39a4300dc430" type="DB:BAD_SQL_SYNTAX, DB:QUERY_EXECUTION, DB:RETRY_EXHAUSTED">
+			<logger level="INFO" doc:name="Error Response Payload" doc:id="f2de0535-fbf5-434d-9b2d-70ab5d6f74c3" message="Error Payload: #[write(error.muleMessage.payload, 'application/json')]" />
+			<ee:transform doc:name="Build Cloudhub Message Structure" doc:id="1b66b558-91f0-4be6-b3c2-9ce9333f036b" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Database Exception has occured.\nError Message: " ++ 
+(error.detailedDescription default (error.description default "No Error Details Available")) ++ 
+".\nError Payload Body: " ++ (error.muleMessage.payload default "No Error Payload Body"),
+	"customProperties": {
+		"timestamp": (now() >> Mule::p('logging.timeZone')) as String{format: Mule::p('logging.timeFormat')},
+		"errorType": "DB Exception"
+	},
+	"priority": "ERROR"
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+500]]></ee:set-variable>
+				</ee:variables>
+			
+</ee:transform>
+			<flow-ref doc:name="Create Cloudhub Notification" doc:id="4eeceb4f-41ed-4450-8ff4-85b06f5a1e1c" name="cloudhub-notification" />
+
+		
+</on-error-propagate>
+       
+        
+       <!--
+        <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2b06904e-1b7b-45ff-a917-456201eb18ce" type="HTTP:BAD_GATEWAY, HTTP:CLIENT_SECURITY, HTTP:CONNECTIVITY, HTTP:FORBIDDEN, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:NOT_FOUND, HTTP:PARSING, HTTP:RETRY_EXHAUSTED, HTTP:SECURITY, HTTP:SERVICE_UNAVAILABLE, HTTP:TIMEOUT, HTTP:TOO_MANY_REQUESTS, HTTP:UNAUTHORIZED, HTTP:UNSUPPORTED_MEDIA_TYPE">
+			<logger level="INFO" doc:name="HTTP Request Exception" doc:id="87896956-3df9-4a7e-8535-a5dc9ad16168" message='HTTP Request Exception Occurred. Error: #[error.detailedDescription default "No Error Message Found"]' />
+			<logger level="INFO" doc:name="Error Response Payload" doc:id="960a408e-8316-4efa-ad2a-a4442ae40102" message="Error Payload: #[write(error.muleMessage.payload, 'application/json')]"/>
+			<ee:transform doc:name="Build Cloudhub Message Structure" doc:id="73153631-86b8-421c-85ab-5f666a9fe1aa" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+-&#45;&#45;
+{
+	"message": "An HTTP Exception has occured.\nError Message: " ++ 
+(error.detailedDescription default (error.description default "No Error Details Available")) ++ 
+".\nError Payload Body: " ++ (error.muleMessage.payload default "No Error Payload Body"),
+	"customProperties": {
+		"timestamp": (now() >> Mule::p('logging.timeZone')) as String{format: Mule::p('logging.timeFormat')},
+		"errorType": "HTTP Request Exception"
+	},
+	"priority": "ERROR"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Create Cloudhub Notification" doc:id="322442e3-cfba-4d0a-9e5d-423f40670fe1" name="cloudhub-notification" />
+		</on-error-propagate>
+        
+        -->
+		
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="bec4a5c2-e6ae-425a-83a2-7bf6258da13b" type="ANY">
+			<logger level="INFO" doc:name="Unhandled Exception" doc:id="53bc885b-8db8-4371-8aa6-ec999bcc95ce" message='Unhandled Exception Occurred. Error: #[error.detailedDescription default "No Error Message Found"]' />
+			<logger level="INFO" doc:name="Error Response Payload" doc:id="a659c259-2a03-48fb-ad88-9993b0d89e1c" message="Error Payload: #[write(error.muleMessage.payload, 'application/json')]" />
+			<ee:transform doc:name="Build Cloudhub Message Structure" doc:id="fa23e2e6-c809-4b5a-b145-583ecec90457" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "An Unhandled Exception has occured.\nError Message: " ++ 
+(error.detailedDescription default (error.description default "No Error Details Available")) ++ 
+".\nError Payload Body: " ++ (error.muleMessage.payload default "No Error Payload Body"),
+	"customProperties": {
+		"timestamp": (now() >> Mule::p('logging.timeZone')) as String{format: Mule::p('logging.timeFormat')},
+		"errorType": "Unhandled Exception"
+	},
+	"priority": "ERROR"
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+500]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Create Cloudhub Notification" doc:id="d1264cb1-f3d1-4f15-a3f7-37ca704e30b1" name="cloudhub-notification"/>
+		</on-error-propagate>
+		
+
+</error-handler>
+	<sub-flow name="cloudhub-notification" doc:id="b7c3ea61-c18c-4fa1-8e58-75c01013ca57">
+		<try doc:name="Try" doc:id="92d09eba-09f0-4bf8-b51f-b05e52ed2ac1" >
+			<cloudhub:create-notification doc:name="Create Cloudhub Notification" doc:id="e6e58d72-9e3b-436f-972f-fb4bd42a9fec" domain="${cloudhub.domain}" config-ref="CloudHub_Config" priority='#[payload.priority default "ERROR"]'>
+			<cloudhub:message><![CDATA[#[payload.message]]]></cloudhub:message>
+			<cloudhub:custom-properties><![CDATA[#[payload.customProperties]]]></cloudhub:custom-properties>
+		</cloudhub:create-notification>
+			<logger level="INFO" doc:name="Successfully Created Cloudhub Notification" doc:id="1d60d47d-ca7e-4705-99fe-72fdec2d5ca2" message="Successfully created cloudhub notification."/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="0c8232d6-6cbb-4f33-8685-eb2a59aa5006" >
+					<logger level="ERROR" doc:name="ERROR - Log Cloudhub Notification Exception" doc:id="77277921-3fee-4110-8f20-273a74fea570" message="#[&quot;An Exception Occurred while creating Cloudhub Notification. &quot; &#10;++ (error.description default (error.detailedDescription default &quot;No Error Information Available&quot;)) &#10;++ &quot;\nError Body: &quot; &#10;++ write(error.muleMessage.payload, 'application/json')]"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+	
+</sub-flow>
+	
+</mule>

@@ -1,0 +1,20 @@
+#%RAML 1.0 DataType
+type: object
+description: Return success or failure response.
+properties: 
+  id: 
+    type: string
+    required: true
+    description: ID for the system
+  created: 
+    type: boolean
+    required: true
+    description: A new record was created in the system.
+  success: 
+    type: boolean
+    required: true
+    description: Action was successful for the record.
+  message: 
+    type: string
+    required: true
+    description: Error message.

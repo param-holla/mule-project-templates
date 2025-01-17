@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="upsert-recordsFlow" doc:id="46278793-989a-4c8a-bd79-6ab97dad740c" >
+		<set-variable value="#[attributes.uriParams.'object-name']" doc:name="sfdc_object_name" doc:id="ccaf65d4-c5c5-4c02-a228-d3652c3c201c" variableName="sfdc_object_name" />
+		<set-variable value="#[attributes.queryParams.'external_id_name']" doc:name="sfdc_external_id_name" doc:id="c04796dc-47b4-485f-8ae4-d95d682db543" variableName="sfdc_external_id_name" />
+		<set-variable value="#[payload]" doc:name="request_received" doc:id="f1c9d1ae-a19c-47d9-822f-23393272e28c" variableName="request_received" />
+		<ee:transform doc:name="Handle Date and DateTime Format Issues" doc:id="e09691b2-e411-4cb7-afd5-dfc47a69d132" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+
+output application/java
+import * from dataweave::common
+---
+payload map (record, index) -> formatDateTimes(record)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert records" doc:id="c951c0c9-b327-4969-b59d-2046738d0a69" config-ref="Salesforce_Config" externalIdFieldName="#[vars.sfdc_external_id_name]" objectType="#[vars.sfdc_object_name]"/>
+		<ee:transform doc:name="Format Output" doc:id="141ee561-34b6-44f7-a16b-3ba6dace55d8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dataweave::common
+---
+payload.items map (value, index) -> generateResponseObject(value, index, vars.sfdc_object_name, vars.request_received[index])]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Upsert Operation Completed" doc:id="aa9ad62b-dd99-4285-9333-8b1fd3dfe02b" message="Upsert Operation Completed" />
+	</flow>
+</mule>

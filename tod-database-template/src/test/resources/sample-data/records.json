@@ -1,0 +1,30 @@
+[
+  {
+    "FirstName": "Todd",
+    "JerseyNumber": 144,
+    "LastUpdated": "2020-01-01T00:00:00.000008",
+    "PlayerID": 13,
+    "LastName": "Marcus"
+  },
+  {
+    "FirstName": "Alan",
+    "JerseyNumber": 82,
+    "LastUpdated": "2020-01-01T00:00:00",
+    "PlayerID": 14,
+    "LastName": "Rickman"
+  },
+  {
+    "FirstName": "Daniel",
+    "JerseyNumber": 909,
+    "LastUpdated": "2000-04-02T12:00:00",
+    "PlayerID": 15,
+    "LastName": "Radcliff"
+  },
+  {
+    "FirstName": "Jason",
+    "JerseyNumber": 22,
+    "LastUpdated": "2018-01-01T00:00:00.000008",
+    "PlayerID": 16,
+    "LastName": "Todd"
+  }
+]
