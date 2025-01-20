@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="get:\resource:mule-api-template-impl" doc:id="77c4eee7-c0bf-450b-8984-7b2cec460d24" >
+		<logger level="INFO" doc:name="Implement Here" doc:id="97389bef-f299-468f-ae5d-7fc0f6ffbfc8" message="#[payload]"/>
+	</sub-flow>
+</mule>

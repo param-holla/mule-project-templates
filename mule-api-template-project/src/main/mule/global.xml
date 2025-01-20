@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" 
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+
+	
+	<global-property doc:name="Global Property" doc:id="438464f3-38a5-471d-8558-aa6cf47ab490" name="mule.env" value="local" />
+	<global-property doc:name="Global Property" doc:id="91ce4cb2-77c7-4552-b462-4fd2614e01a1" name="aes.key" value="aes123456devkey1" />
+	<secure-properties:config name="secure-properties-config" doc:name="Secure Properties Config" doc:id="da28466a-b2aa-4d8d-b0c6-294d250d9020" file="properties/secure-${mule.env}.yaml" key="${aes.key}" />
+    
+    <configuration-properties doc:name="Configuration properties" doc:id="04d86592-3f72-4d90-b00d-d5b9b5ccaebd" file="properties\common-properties.yaml" doc:description="Configuration for common application properties"/>
+  	<configuration-properties doc:name="Configuration properties" doc:id="0b953c3b-775e-431c-9193-f5c040328150" doc:description="Configuration to load environment specific properties" file="properties/${mule.env}-properties.yaml" />
+	<configuration doc:name="Configuration" doc:id="b48ce221-8136-4c79-9cd0-d934a0785f91" defaultErrorHandler-ref="global_error_handler" />
+   	<http:listener-config name="http-listener-config" doc:description="Configuration for HTTP/S Listener">
+        <http:listener-connection host="0.0.0.0" port="${https.port}" protocol="HTTPS">
+			<tls:context >
+				<tls:key-store type="jks" path="${keystore.path}" keyPassword="${keystore.keyPassword}" password="${keystore.storePassword}" />
+			</tls:context>
+		</http:listener-connection>
+    </http:listener-config>
+ 	<apikit:config name="mule-api-template-config" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+   
+   
+</mule>

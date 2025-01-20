@@ -1,0 +1,8 @@
+# SMTP Details
+smtp:
+  host: ""
+  port: ""
+  user: ""
+  password: ""
+  retryCount: ""
+  retryInterval: ""

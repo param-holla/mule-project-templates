@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="health-check-implSub_Flow" doc:id="dfa4b39a-c500-44cf-b075-686257a4ecf3" >
+		<logger level="INFO" doc:name="Logger" doc:id="da88d6f4-0395-4c66-80e2-9996a6535b81" />
+		<choice doc:name="Choice" doc:id="8c960d77-84e8-4f0c-b55d-e672d931ec2f" >
+			<when expression="#[attributes.queryParams.'checkDependencies' == true default false]">
+				<scatter-gather doc:name="Scatter-Gather" doc:id="7243eb9b-2982-435d-bde2-04e31d1730cd">
+					<route>
+						<flow-ref doc:name="verify-backend1-connectivity" doc:id="cc4b5c84-9999-4c2b-ad45-964bb96fca03" name="verify-backend1-connectivity" target="backend1HealthStatus" />
+					</route>
+					<route >
+						<flow-ref doc:name="verify-backend2-connectivity1" doc:id="5c713b20-15b8-4ddc-b470-10f046ff8e29" name="verify-backend1-connectivity" target="backend2HealthStatus" />
+					</route>
+				</scatter-gather>
+				<ee:transform doc:name="Accumulate Health statuses" doc:id="38f17bbe-727a-41ce-9744-c4fd331ddedf" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="dependencyStatusList" ><![CDATA[%dw 2.0
+output application/java
+---
+[] + 
+vars.backend1HealthStatus +
+vars.backend2HealthStatus]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="ea37867a-0474-49cb-91ad-3846ae9be64f" />
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Set Response Payload" doc:id="2a6708f7-6f4a-4630-a400-aaa9533074d9" >
+			<ee:message >
+				<ee:set-payload resource="/dwl/healthCheckResponse.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="41be9d47-be29-47b3-8b2c-47435446740b" />
+	</sub-flow>
+	<sub-flow name="verify-backend1-connectivity" doc:id="4c0a9533-5188-400e-864f-75727687ed6a" >
+		<logger level="INFO" doc:name="Logger" doc:id="0636b587-4f95-4ff4-978b-621344b9f0c1" />
+		<try doc:name="Try" doc:id="f3bd4e26-1954-4a1d-a4f3-4c9519fc030d" >
+			<logger level="INFO" doc:name="Logger" doc:id="b485dfdb-9539-42e6-bca8-4f8de634f0c4" />
+			<set-payload value='#[output application/json&#10;---&#10;{&#10;      "name": "System 1",&#10;      "status": "UP"&#10;    }]' doc:name="Set Payload" doc:id="358f6f9f-35bd-4070-bafd-ad3595e99735" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="681e544b-1925-44b3-96a1-d5839ff88c0f" >
+					<logger level="INFO" doc:name="Logger" doc:id="3365909b-3f26-48f4-9bd5-008291562d33" />
+					<set-payload value='#[output application/json&#10;---&#10;{&#10;      "name": "System 1",&#10;      "status": "DOWN",&#10;      "details": error.description&#10;    }]' doc:name="Set Payload" doc:id="bfdba222-08fb-4d1a-ac14-532a7bf15a9a" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="5fc2174b-406a-41a6-b531-56368a51c876" />
+	</sub-flow>
+</mule>

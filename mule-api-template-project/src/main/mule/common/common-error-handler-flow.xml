@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="abf05511-92c0-4350-9a66-22c02e869e24" file="properties\common-properties.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="0b03104d-575b-4638-9b7e-daed12bd84eb" file="properties/${mule.env}-properties.yaml" />
+	<error-handler name="global_error_handler" doc:id="4449b1a5-7070-424c-bd9d-5cb61a5a5508" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e9ceec54-da07-429c-be8d-4cd998170c7a" type="CONNECTIVITY">
+			<set-variable value="504" doc:name="Set Variable" doc:id="cdc92ce4-ae53-45e5-b5be-2c6c33e3be9f" variableName="httpStatus"/>
+			<flow-ref doc:name="Flow Reference" doc:id="52721b42-0392-4c8a-9c99-101955895cc4" name="Generate_Error_Response"/>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="69ddeaba-3067-457e-b1a7-b16541e84bb4" type="MULE:CLIENT_SECURITY">
+			<set-variable value="500" doc:name="HTTP Response Status" doc:id="38d50211-f645-47e1-8230-0dc181a32bac" variableName="httpStatus"/>
+			<flow-ref doc:name="Flow Reference" doc:id="e678c5a5-d528-49b7-b9bb-4fd61bde9f2f" name="Generate_Error_Response"/>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1cfe3880-7756-4a98-9470-f19b8fc499cd" type="MULE:SERVER_SECURITY">
+			<choice doc:name="Choice" doc:id="7d739249-3d9c-4d27-9b1e-74da1f91836f" >
+				<when expression="#[error.errorType.identifier == 'UNAUTHORIZED']">
+					<set-variable value="401" doc:name="HTTP Response Status" doc:id="b36ff5a2-a6e1-4762-a42c-9bd073356e5e" variableName="httpStatus" />
+				</when>
+				<otherwise >
+					<set-variable value="403" doc:name="HTTP Response Status" doc:id="144635cd-fd38-4e97-afe9-f9e20c61f5e1" variableName="httpStatus"/>
+				</otherwise>
+			</choice>
+			<flow-ref doc:name="Flow Reference" doc:id="843dca13-dd40-4547-aad1-d936ead25e9f" name="Generate_Error_Response"/>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a19571f9-5981-409c-8f96-7e23e46e55e5" type="ANY">
+			<choice doc:name="Choice" doc:id="f8142fff-62a6-4992-b913-33ed3094cca0" >
+				<when expression="#[error.errorType.namespace =='APIKIT']">
+					<choice doc:name="Choice" doc:id="124c44dd-4cc8-4d2b-8546-6264eaeda859" >
+						<when expression="#[error.errorType.identifier == 'BAD_REQUEST']">
+							<set-variable value="400" doc:name="HTTP Response Status" doc:id="ba49247c-5fe7-4b1c-9b98-04cf76378b73" variableName="httpStatus"/>
+						</when>
+						<when expression="#[error.errorType.identifier == 'NOT_FOUND']">
+							<set-variable value="404" doc:name="HTTP Response Status" doc:id="3eadfb77-41d4-4d11-ad7c-56231c545729" variableName="httpStatus"/>
+						</when>
+						<when expression="#[error.errorType.identifier == 'METHOD_NOT_ALLOWED']">
+							<set-variable value="405" doc:name="HTTP Response Status" doc:id="07124596-6d05-424f-bfbb-1e7ab73ae355" variableName="httpStatus"/>
+						</when>
+						<when expression="#[error.errorType.identifier == 'NOT_ACCEPTABLE']">
+							<set-variable value="406" doc:name="HTTP Response Status" doc:id="2bbdf4d6-89e9-4e9e-a581-5cf4b4469c7b" variableName="httpStatus"/>
+						</when>
+						<when expression="#[error.errorType.identifier == 'UNSUPPORTED_MEDIA_TYPE']">
+							<set-variable value="415" doc:name="HTTP Response Status" doc:id="2e819e01-1bc4-4859-807e-70dd9975e71d" variableName="httpStatus"/>
+						</when>
+						<when expression="#[error.errorType.identifier == 'NOT_IMPLEMENTED']">
+							<set-variable value="501" doc:name="HTTP Response Status" doc:id="63aee855-c8f7-443f-a532-5f5d1bc8d82e" variableName="httpStatus"/>
+						</when>
+					</choice>
+				</when>
+				<otherwise >
+					<set-variable value="500" doc:name="HTTP Response Status" doc:id="546bda05-ac4b-4e9b-9dd8-7c0540626e94" variableName="httpStatus"/>
+				</otherwise>
+			</choice>
+			<logger level="INFO" doc:name="Logger" doc:id="f9a83f9b-c291-4ff3-9900-74a6f3c6d2de" message="#[vars.httpStatus]"/>
+			<flow-ref doc:name="Flow Reference" doc:id="9f5b0d64-8837-4e2b-bbc9-5dc06f399b5f" name="Generate_Error_Response"/>
+		</on-error-propagate>
+	</error-handler>
+	<sub-flow name="Generate_Error_Response" doc:id="76f5a814-eb93-4f9d-802e-e44ee248f40e" >
+      <ee:transform doc:name="Compose Error Payload" doc:id="47e22f5c-d3be-49a8-8211-905a114445ec">
+			<ee:message>
+				<ee:set-payload resource="dwl/globalErrorResponse.dwl" />
+			</ee:message>
+		</ee:transform>
+        <async doc:name="Async" doc:id="7d1ad985-2b23-4011-9ca4-f17bb8787fd5" >
+        	<set-variable value="Error Occured" doc:name="Set requestState - Error Occured" doc:id="2cdfb233-6e13-47a8-8625-6621408ba726" variableName="requestState" />
+			<flow-ref doc:name="format-and-log-error-message" doc:id="8e44d7a7-29c9-4312-8d51-6b04378a75e2" name="format-and-log-error-message" />
+		</async>
+    
+    </sub-flow>
+</mule>

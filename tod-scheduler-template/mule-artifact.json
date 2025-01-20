@@ -1,4 +1,9 @@
 {
-  "minMuleVersion": "4.3.0-20200824",
-  "secureProperties": ["runtime.key", "keystore.password", "cloudhub.password"]
+    "minMuleVersion": "4.3.0-20200824",
+    "javaSpecificationVersions": ["17"],
+    "secureProperties": [
+        "runtime.key",
+        "keystore.password",
+        "cloudhub.password"
+    ]
 }
