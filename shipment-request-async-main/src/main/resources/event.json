@@ -1,0 +1,17 @@
+{
+  "shipment_id": "1",
+  "paymentConfiguration": [
+    "Check"
+  ],
+  "products": [
+    {
+      "name": "Apple MacBook Pro",
+      "quantity": 1
+    }
+  ],
+  "address": {
+    "street": "645 Hulet Dr",
+    "city": "Bloomfield Hills",
+    "state": "MI"
+  }
+}

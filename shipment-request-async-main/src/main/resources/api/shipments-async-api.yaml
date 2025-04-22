@@ -1,0 +1,68 @@
+asyncapi: '2.6.0'
+info:
+  title: shipments-async-api
+  version: '1.0.0'
+  description: Asynchronous events guide for publishing and subscribing to shipment requests.
+
+servers:
+  dev:
+    url: https://mq-us-east-1.anypoint.mulesoft.com/api/v1/organizations/${ORG_ID}/environments/${ENV_ID}
+    protocol: anypointmq
+    protocolVersion: v1
+
+channels:
+  shipment-queue:
+    subscribe:
+      operationId: listen-shipment-request
+      description: Listen to created shipment request
+      message:
+        $ref: "#/components/messages/ShipmentRequest"
+
+    publish:
+      operationId: publish-shipment-request
+      description: Create new shipment request
+      message:
+        $ref: "#/components/messages/ShipmentRequest"
+  
+components:
+  messages:
+    ShipmentRequest:
+      summary: Shipment Request object
+      payload:
+        type: object
+        properties:
+          shipment_id: 
+            type: string
+            example: "123"
+          paymentConfiguration:
+            type: array
+            items:
+              type: string
+              enum:
+                - "Check"
+                - "Card"
+                - "ApplePay"
+              example: "ApplePay"
+          products:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Product One"
+                quantity:
+                  type: number
+                  example: 1
+          address:
+            type: object
+            properties:
+              street:
+                type: string
+                example: "645 Hulet Dr"
+              city:
+                type: string
+                example: "Bloomfield Hills"
+              state:
+                type: string
+                example: ""

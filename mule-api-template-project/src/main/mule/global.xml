@@ -26,7 +26,7 @@ http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/m
    	<http:listener-config name="http-listener-config" doc:description="Configuration for HTTP/S Listener">
         <http:listener-connection host="0.0.0.0" port="${https.port}" protocol="HTTPS">
 			<tls:context >
-				<tls:key-store type="jks" path="${keystore.path}" keyPassword="${keystore.keyPassword}" password="${keystore.storePassword}" />
+				<tls:key-store type="jks" path="${keystore.path}" keyPassword="${secure::keystore.keyPassword}" password="${secure::keystore.storePassword}" />
 			</tls:context>
 		</http:listener-connection>
     </http:listener-config>

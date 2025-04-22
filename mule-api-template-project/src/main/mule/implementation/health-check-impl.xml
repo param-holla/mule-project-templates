@@ -1,33 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
 	<sub-flow name="health-check-implSub_Flow" doc:id="dfa4b39a-c500-44cf-b075-686257a4ecf3" >
 		<logger level="INFO" doc:name="Logger" doc:id="da88d6f4-0395-4c66-80e2-9996a6535b81" />
 		<choice doc:name="Choice" doc:id="8c960d77-84e8-4f0c-b55d-e672d931ec2f" >
 			<when expression="#[attributes.queryParams.'checkDependencies' == true default false]">
-				<scatter-gather doc:name="Scatter-Gather" doc:id="7243eb9b-2982-435d-bde2-04e31d1730cd">
-					<route>
-						<flow-ref doc:name="verify-backend1-connectivity" doc:id="cc4b5c84-9999-4c2b-ad45-964bb96fca03" name="verify-backend1-connectivity" target="backend1HealthStatus" />
-					</route>
-					<route >
-						<flow-ref doc:name="verify-backend2-connectivity1" doc:id="5c713b20-15b8-4ddc-b470-10f046ff8e29" name="verify-backend1-connectivity" target="backend2HealthStatus" />
-					</route>
-				</scatter-gather>
-				<ee:transform doc:name="Accumulate Health statuses" doc:id="38f17bbe-727a-41ce-9744-c4fd331ddedf" >
-					<ee:message >
-					</ee:message>
-					<ee:variables >
-						<ee:set-variable variableName="dependencyStatusList" ><![CDATA[%dw 2.0
-output application/java
----
-[] + 
-vars.backend1HealthStatus +
-vars.backend2HealthStatus]]></ee:set-variable>
-					</ee:variables>
-				</ee:transform>
+				<set-variable value="#[[]]" doc:name="Set healthStatus" doc:id="61b25944-3bbe-4e14-a046-7ab251ee053d" variableName="healthStatus" />
+				<flow-ref doc:name="SF Health Check" doc:id="898444ca-bb30-4ddb-ae19-eb3d6a44d920" name="sf-health-check" />
+				<flow-ref doc:name="DB Health Check" doc:id="3409755c-0436-465f-af91-9e1722aaa55c" name="db-health-check" />
 			</when>
 			<otherwise >
 				<logger level="INFO" doc:name="Logger" doc:id="ea37867a-0474-49cb-91ad-3846ae9be64f" />
@@ -35,23 +19,27 @@ vars.backend2HealthStatus]]></ee:set-variable>
 		</choice>
 		<ee:transform doc:name="Set Response Payload" doc:id="2a6708f7-6f4a-4630-a400-aaa9533074d9" >
 			<ee:message >
-				<ee:set-payload resource="/dwl/healthCheckResponse.dwl" />
+				<ee:set-payload resource="dwl/healthCheckResponse.dwl" />
 			</ee:message>
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="41be9d47-be29-47b3-8b2c-47435446740b" />
 	</sub-flow>
-	<sub-flow name="verify-backend1-connectivity" doc:id="4c0a9533-5188-400e-864f-75727687ed6a" >
-		<logger level="INFO" doc:name="Logger" doc:id="0636b587-4f95-4ff4-978b-621344b9f0c1" />
-		<try doc:name="Try" doc:id="f3bd4e26-1954-4a1d-a4f3-4c9519fc030d" >
-			<logger level="INFO" doc:name="Logger" doc:id="b485dfdb-9539-42e6-bca8-4f8de634f0c4" />
-			<set-payload value='#[output application/json&#10;---&#10;{&#10;      "name": "System 1",&#10;      "status": "UP"&#10;    }]' doc:name="Set Payload" doc:id="358f6f9f-35bd-4070-bafd-ad3595e99735" />
-			<error-handler >
-				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="681e544b-1925-44b3-96a1-d5839ff88c0f" >
-					<logger level="INFO" doc:name="Logger" doc:id="3365909b-3f26-48f4-9bd5-008291562d33" />
-					<set-payload value='#[output application/json&#10;---&#10;{&#10;      "name": "System 1",&#10;      "status": "DOWN",&#10;      "details": error.description&#10;    }]' doc:name="Set Payload" doc:id="bfdba222-08fb-4d1a-ac14-532a7bf15a9a" />
-				</on-error-continue>
-			</error-handler>
-		</try>
-		<logger level="INFO" doc:name="Logger" doc:id="5fc2174b-406a-41a6-b531-56368a51c876" />
-	</sub-flow>
+	<flow name="sf-health-check" doc:id="714e730b-9575-449f-b81e-4ab695872b9b">
+		<!-- [STUDIO:"Request to SF"]<http:request method="GET" doc:name="Request to SF" doc:id="8f467638-44d7-4ea4-9253-ad691975aec6" config-ref="Salesforce_SAPI_Request_configuration" path="${salesforce.sapi.path.health}" /> [STUDIO] -->
+		<set-variable value='#[(vars.healthStatus default []) ++ {"name": "SALESFORCE","status": "UP"}]' doc:name="Set healthStatus" doc:id="b6b408af-37ab-4813-a52e-07917206a274" variableName="healthStatus" />
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="235af9a0-0b97-46e6-b3b9-d99b91ebc6fc">
+				<set-variable value='#[(vars.healthStatus default []) ++ {"name": "SALESFORCE","status": "DOWN","details": error.exception.errorMessage.payload.errorDetails[0].message default error.description}]' doc:name="Set healthStatus" doc:id="306354d2-64b5-435c-bf24-0ace48fddd23" variableName="healthStatus" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="db-health-check" doc:id="821c9d3a-5fc6-4da7-b46e-2cbe3220c731" >
+		<!-- [STUDIO:"Request to DB"]<http:request method="GET" doc:name="Request to DB" doc:id="e2c9f4a2-f3a1-42b6-8a7c-1d45e3c730f4" config-ref="DB_SAPI_Request_configuration" path="${db.sapi.path.health}" /> [STUDIO] -->
+		<set-variable value='#[(vars.healthStatus default []) ++ {"name": "DATABASE","status": "UP"}]' doc:name="Set healthStatus" doc:id="dd953724-edf3-46a1-b898-b331dfbfdb0a" variableName="healthStatus" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="60bf3d24-7902-43af-9fb3-14abdfc23d24" >
+				<set-variable value='#[(vars.healthStatus default []) ++ {"name": "DATABASE","status": "DOWN","details": error.exception.errorMessage.payload.errorDetails[0].message default error.description}]' doc:name="Set healthStatus" doc:id="08314ac0-9062-4869-a8e9-e8355bb22392" variableName="healthStatus" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
 </mule>

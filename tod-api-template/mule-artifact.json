@@ -1,8 +1,0 @@
-{
-    "minMuleVersion": "4.3.0",
-    "javaSpecificationVersions": ["17"],
-    "secureProperties": [
-        "runtime.key",
-        "anypoint.platform.client_secret"
-    ]
-}

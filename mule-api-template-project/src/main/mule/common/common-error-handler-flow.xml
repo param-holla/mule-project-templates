@@ -1,73 +1,119 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<configuration-properties doc:name="Configuration properties" doc:id="abf05511-92c0-4350-9a66-22c02e869e24" file="properties\common-properties.yaml" />
-	<configuration-properties doc:name="Configuration properties" doc:id="0b03104d-575b-4638-9b7e-daed12bd84eb" file="properties/${mule.env}-properties.yaml" />
-	<error-handler name="global_error_handler" doc:id="4449b1a5-7070-424c-bd9d-5cb61a5a5508" >
-		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e9ceec54-da07-429c-be8d-4cd998170c7a" type="CONNECTIVITY">
-			<set-variable value="504" doc:name="Set Variable" doc:id="cdc92ce4-ae53-45e5-b5be-2c6c33e3be9f" variableName="httpStatus"/>
-			<flow-ref doc:name="Flow Reference" doc:id="52721b42-0392-4c8a-9c99-101955895cc4" name="Generate_Error_Response"/>
-		</on-error-propagate>
-		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="69ddeaba-3067-457e-b1a7-b16541e84bb4" type="MULE:CLIENT_SECURITY">
-			<set-variable value="500" doc:name="HTTP Response Status" doc:id="38d50211-f645-47e1-8230-0dc181a32bac" variableName="httpStatus"/>
-			<flow-ref doc:name="Flow Reference" doc:id="e678c5a5-d528-49b7-b9bb-4fd61bde9f2f" name="Generate_Error_Response"/>
-		</on-error-propagate>
-		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1cfe3880-7756-4a98-9470-f19b8fc499cd" type="MULE:SERVER_SECURITY">
-			<choice doc:name="Choice" doc:id="7d739249-3d9c-4d27-9b1e-74da1f91836f" >
+<mule xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd">
+	<error-handler name="global_error_handler" doc:id="6a8eb831-e82d-4377-8665-155f0a1621d0" >
+		<on-error-continue enableNotifications="false" logException="true" doc:name="On Error Continue" doc:id="faea5e23-e866-47b0-8950-5e4bb0644780" type="ANY">
+			<choice doc:name="Choice" doc:id="2c8190ba-7f26-4f02-8674-6364317a6c36">
+				<!-- Transient Errors: Apply Retry Logic -->
+				<when expression="#[['BAD_REQUEST','EXPRESSION','QUERY_EXECUTION','BAD_SQL_SYNTAX','VALIDATIIN','PARSING','TRANSFORMATION'] contains error.errorType.identifier]">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 400]" doc:name="HTTP Response Status - 400" doc:id="342f3efa-7ef1-4209-aa5b-017da58e71a6" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="9ce36a8b-0ad3-4fe4-bf9f-eefb2b319f36" name="api-error-response" />
+				</when>
 				<when expression="#[error.errorType.identifier == 'UNAUTHORIZED']">
-					<set-variable value="401" doc:name="HTTP Response Status" doc:id="b36ff5a2-a6e1-4762-a42c-9bd073356e5e" variableName="httpStatus" />
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 401]" doc:name="HTTP Response Status - 401" doc:id="82743fef-0aa2-49f3-aaab-1fa246e441cf" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="9207019b-9545-4ead-8bb3-408eb293f91b" name="api-error-response" />
 				</when>
-				<otherwise >
-					<set-variable value="403" doc:name="HTTP Response Status" doc:id="144635cd-fd38-4e97-afe9-f9e20c61f5e1" variableName="httpStatus"/>
+				<when expression="#[error.errorType.identifier == 'FORBIDDEN']">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 403]" doc:name="HTTP Response Status - 403" doc:id="9dd180e1-4b84-4863-a927-cb7be5884e60" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="56bcb5db-3426-41c5-b1ac-dcb3c264707b" name="api-error-response" />
+				</when>
+				<when expression="#[error.errorType.identifier == 'NOT_FOUND']">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 404]" doc:name="HTTP Response Status - 404" doc:id="6803fa9b-230a-4e38-be31-be0866616af1" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="9159aef4-a347-4968-95f1-249f3f1bad67" name="api-error-response" />
+				</when>
+				<when expression="#[error.errorType.identifier == 'METHOD_NOT_ALLOWED']">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 405]" doc:name="HTTP Response Status- 405" doc:id="bb027d35-9ba5-4d8d-af26-cd7c014a7232" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="ddbd0260-78f7-4a3c-a17f-77c68fce8069" name="api-error-response" />
+				</when>
+				<when expression="#[error.errorType.identifier == 'NOT_ACCEPTABLE']">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 406]" doc:name="HTTP Response Status - 406" doc:id="653e3ef8-67a2-4ec2-89aa-23b28e09466f" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="3c6dd450-3c39-42b0-8a11-ee3bcc0d6593" name="api-error-response" />
+				</when>
+				<when expression="#[error.errorType.identifier == 'UNSUPPORTED_MEDIA_TYPE']">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 415]" doc:name="HTTP Response Status - 415" doc:id="95931027-774a-4a52-a6ce-82442e1af474" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="7657bd34-44ae-45a8-918a-0a9f4d436d50" name="api-error-response" />
+				</when>
+		        <when expression="#[error.errorType.identifier == 'NOT_IMPLEMENTED']">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 501]" doc:name="HTTP Response Status - 501 " doc:id="b65c3114-480e-4c58-8459-141b7f32934c" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="1040235d-4b98-47de-8899-87e57f7996e1" name="api-error-response" />
+				</when>
+				
+				
+				<!-- Permanent Errors: Log and Return Response -->
+				<when expression="#[error.errorType.identifier == 'CONFLICT']">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 409]" doc:name="HTTP Response Status - 409" doc:id="91aee489-9c5a-4780-857f-e9c0b88d18ab" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="e9fa9e8b-3231-4c2a-83df-cf5ab5681c41" name="api-error-response" />
+					<raise-error doc:name="Raise error" doc:id="c34bfd49-7cd4-4151-8727-03742d0da85c" type="CUSTOM:RETRYABLE_ERROR"/>
+				</when>
+				<when expression="#[error.errorType.identifier == 'TOO_MANY_REQUESTS']">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 429]" doc:name="HTTP Response Status - 429" doc:id="48e1da27-bfe9-432d-bcd6-52456f07e806" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="86823739-aa50-4e07-98b6-1f25e7642b5f" name="api-error-response" />
+					<raise-error doc:name="Raise error" doc:id="374800fc-725b-46a0-90bf-725589ccefc3" type="CUSTOM:RETRYABLE_ERROR" />
+				</when>
+				<when expression="#[['CONNECTIVITY','DELIVERY_FAILURE'] contains error.errorType.identifier]">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 503]" doc:name="HTTP Response Status - 503" doc:id="0e39003d-cebc-4cd3-940a-7cdf62c2e666" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="4955c8a2-8e07-4fd1-9230-4395851ea435" name="api-error-response" />
+					<raise-error doc:name="Raise error" doc:id="9fcf96f3-150f-47df-8adb-9b4a8b36b98f" type="CUSTOM:RETRYABLE_ERROR" />
+				</when>
+				<when expression="#[['TIMEOUT','GATEWAY_TIMEOUT'] contains error.errorType.identifier]">
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 504]" doc:name="HTTP Response Status - 504" doc:id="85d46ed0-5b84-441c-a0dd-9f1260cbf1a8" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="a4bfc2f9-8c0b-421c-bb83-078e53195ed4" name="api-error-response" />
+					<raise-error doc:name="Raise error" doc:id="2156a7e1-d0d1-4574-86c2-2aabe4cb3aa6" type="CUSTOM:RETRYABLE_ERROR" />
+				</when>
+				<otherwise>
+					<set-variable value="#[error.exception.errorMessage.attributes.statusCode default 500]" doc:name="HTTP Response Status - 500" doc:id="b074c285-1f12-4a7d-a55b-a454198ad2da" variableName="httpStatus" />
+					<flow-ref doc:name="Set API Response" doc:id="e9907196-8dec-4687-987d-0449f1fcb50c" name="api-error-response" />
+					<raise-error doc:name="Raise error" doc:id="1de4e36a-0e6c-4d46-9a88-ed4cd5dff24c" type="CUSTOM:RETRYABLE_ERROR" />
 				</otherwise>
 			</choice>
-			<flow-ref doc:name="Flow Reference" doc:id="843dca13-dd40-4547-aad1-d936ead25e9f" name="Generate_Error_Response"/>
-		</on-error-propagate>
-		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a19571f9-5981-409c-8f96-7e23e46e55e5" type="ANY">
-			<choice doc:name="Choice" doc:id="f8142fff-62a6-4992-b913-33ed3094cca0" >
-				<when expression="#[error.errorType.namespace =='APIKIT']">
-					<choice doc:name="Choice" doc:id="124c44dd-4cc8-4d2b-8546-6264eaeda859" >
-						<when expression="#[error.errorType.identifier == 'BAD_REQUEST']">
-							<set-variable value="400" doc:name="HTTP Response Status" doc:id="ba49247c-5fe7-4b1c-9b98-04cf76378b73" variableName="httpStatus"/>
-						</when>
-						<when expression="#[error.errorType.identifier == 'NOT_FOUND']">
-							<set-variable value="404" doc:name="HTTP Response Status" doc:id="3eadfb77-41d4-4d11-ad7c-56231c545729" variableName="httpStatus"/>
-						</when>
-						<when expression="#[error.errorType.identifier == 'METHOD_NOT_ALLOWED']">
-							<set-variable value="405" doc:name="HTTP Response Status" doc:id="07124596-6d05-424f-bfbb-1e7ab73ae355" variableName="httpStatus"/>
-						</when>
-						<when expression="#[error.errorType.identifier == 'NOT_ACCEPTABLE']">
-							<set-variable value="406" doc:name="HTTP Response Status" doc:id="2bbdf4d6-89e9-4e9e-a581-5cf4b4469c7b" variableName="httpStatus"/>
-						</when>
-						<when expression="#[error.errorType.identifier == 'UNSUPPORTED_MEDIA_TYPE']">
-							<set-variable value="415" doc:name="HTTP Response Status" doc:id="2e819e01-1bc4-4859-807e-70dd9975e71d" variableName="httpStatus"/>
-						</when>
-						<when expression="#[error.errorType.identifier == 'NOT_IMPLEMENTED']">
-							<set-variable value="501" doc:name="HTTP Response Status" doc:id="63aee855-c8f7-443f-a532-5f5d1bc8d82e" variableName="httpStatus"/>
-						</when>
-					</choice>
-				</when>
-				<otherwise >
-					<set-variable value="500" doc:name="HTTP Response Status" doc:id="546bda05-ac4b-4e9b-9dd8-7c0540626e94" variableName="httpStatus"/>
-				</otherwise>
-			</choice>
-			<logger level="INFO" doc:name="Logger" doc:id="f9a83f9b-c291-4ff3-9900-74a6f3c6d2de" message="#[vars.httpStatus]"/>
-			<flow-ref doc:name="Flow Reference" doc:id="9f5b0d64-8837-4e2b-bbc9-5dc06f399b5f" name="Generate_Error_Response"/>
-		</on-error-propagate>
+		</on-error-continue>
+
 	</error-handler>
-	<sub-flow name="Generate_Error_Response" doc:id="76f5a814-eb93-4f9d-802e-e44ee248f40e" >
-      <ee:transform doc:name="Compose Error Payload" doc:id="47e22f5c-d3be-49a8-8211-905a114445ec">
+	<sub-flow name="api-error-response" doc:id="d8491c27-ba82-4aef-9ad0-ce70f68c2227">
+		<ee:transform doc:name="Compose Error Payload" doc:id="7b9da2c2-6876-4da9-88e5-cfeef05a13c9">
 			<ee:message>
 				<ee:set-payload resource="dwl/globalErrorResponse.dwl" />
 			</ee:message>
 		</ee:transform>
-        <async doc:name="Async" doc:id="7d1ad985-2b23-4011-9ca4-f17bb8787fd5" >
-        	<set-variable value="Error Occured" doc:name="Set requestState - Error Occured" doc:id="2cdfb233-6e13-47a8-8625-6621408ba726" variableName="requestState" />
-			<flow-ref doc:name="format-and-log-error-message" doc:id="8e44d7a7-29c9-4312-8d51-6b04378a75e2" name="format-and-log-error-message" />
-		</async>
-    
-    </sub-flow>
+		<logger level="ERROR" doc:name="Log Error" doc:id="c9cd30fc-1173-46dc-aa02-a33150fca887" message="#[payload]" category="EXCEPTION" />
+	</sub-flow>
+    <!-- [STUDIO:"cloudhub-notification"]<sub-flow name="cloudhub-notification" doc:id="759a37ad-8db7-42fc-be9b-c4403c5f888c">
+		<ee:transform doc:name="Build Cloudhub Message Structure" doc:id="efd219ec-d659-42dd-bb4d-05bbb908df97" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+{
+	"message": "An Unhandled Exception has occured.\nError Message: " ++ 
+(error.detailedDescription default (error.description default "No Error Details Available")) ++ 
+".\nError Payload Body: " ++ (error.muleMessage.payload default "No Error Payload Body"),
+	"customProperties": {
+		"timestamp": (now() >> Mule::p('logging.timeZone')) as String{format: Mule::p('logging.timeFormat')},
+		"errorType": "Unhandled Exception"
+	},
+	"priority": "ERROR"
+}&#93;&#93;></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<try doc:name="Try" doc:id="f2d788a0-7cc1-4829-a46b-11c3d822bb8d" >
+			<cloudhub:create-notification doc:name="Create Cloudhub Notification" doc:id="eed923f1-7376-4423-9db9-4045c22a90bb" domain="${cloudhub.domain}" config-ref="CloudHub_Config" priority='#[payload.priority default "ERROR"&#93;'>
+			<cloudhub:message><![CDATA[#[payload.message&#93;&#93;&#93;></cloudhub:message>
+			<cloudhub:custom-properties><![CDATA[#[payload.customProperties&#93;&#93;&#93;></cloudhub:custom-properties>
+		</cloudhub:create-notification>
+			<logger level="INFO" doc:name="Successfully Created Cloudhub Notification" doc:id="7d15f406-9ec0-455e-8f2c-3cc0355aafeb" message="Successfully created cloudhub notification."/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="80fe1615-32d1-4d0c-b5b5-4e01bf3f0b11" >
+					<logger level="ERROR" doc:name="ERROR - Log Cloudhub Notification Exception" doc:id="43e187b3-e377-463f-85bb-c1ac33fffae9" message="#[&quot;An Exception Occurred while creating Cloudhub Notification. &quot; 
+&#10;++ (error.description default (error.detailedDescription default &quot;No Error Information Available&quot;)) 
+&#10;++ &quot;\nError Body: &quot; 
+&#10;++ write(error.muleMessage.payload, 'application/json')&#93;"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+	
+</sub-flow> [STUDIO] -->
 </mule>
